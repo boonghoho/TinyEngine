@@ -1,0 +1,16 @@
+{
+  "hooks": {
+    "SessionStart": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash .claude/hooks/session-context.sh",
+            "timeout": 10,
+            "statusMessage": "프로젝트 컨텍스트 로딩 중..."
+          }
+        ]
+      }
+    ]
+  }
+}

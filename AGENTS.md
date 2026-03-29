@@ -53,7 +53,7 @@
 | 멤버 변수 | `m_` 접두사 + camelCase | `m_device`, `m_swapchain` |
 | 상수/매크로 | UPPER_SNAKE_CASE | `MAX_FRAMES_IN_FLIGHT` |
 | Vulkan 핸들 래퍼 | `Vk` 접두사 유지 | `VkDevice`, `VkSwapchainKHR` |
-| 엔진 커스텀 래퍼 | `Te` 접두사 | `TeBuffer`, `TePipeline` |
+| 엔진 커스텀 래퍼 | `TE` 접두사 | `TEBuffer`, `TEPipeline` |
 
 ### RAII 원칙
 
