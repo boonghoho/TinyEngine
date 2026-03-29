@@ -1,0 +1,18 @@
+# Zig 빌드
+.zig-cache/
+zig-out/
+
+# Visual Studio
+.vs/
+*.suo
+*.user
+x64/
+Debug/
+Release/
+
+# 빌드 출력
+bin/
+lib/
+
+# 런타임 생성 파일
+imgui.ini
