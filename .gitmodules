@@ -1,0 +1,12 @@
+[submodule "ThirdParty/SDL3"]
+	path = ThirdParty/SDL3
+	url = https://github.com/libsdl-org/SDL.git
+	branch = main
+[submodule "ThirdParty/imgui"]
+	path = ThirdParty/imgui
+	url = https://github.com/ocornut/imgui.git
+	branch = docking
+[submodule "ThirdParty/zigimg"]
+	path = ThirdParty/zigimg
+	url = https://github.com/zigimg/zigimg.git
+	branch = master

@@ -1,0 +1,114 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="Source Files">
+      <UniqueIdentifier>{4FC737F1-C7A5-4376-A066-2A32D752A2FF}</UniqueIdentifier>
+      <Extensions>cpp;c;cc;cxx;c++;cppm;ixx;def;odl;idl;hpj;bat;asm;asmx</Extensions>
+    </Filter>
+    <Filter Include="Header Files">
+      <UniqueIdentifier>{93995380-89BD-4b04-88EB-625FBE52EBFB}</UniqueIdentifier>
+      <Extensions>h;hh;hpp;hxx;h++;hm;inl;inc;ipp;xsd</Extensions>
+    </Filter>
+    <Filter Include="Resource Files">
+      <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
+      <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
+    </Filter>
+    <Filter Include="Source Files\Core">
+      <UniqueIdentifier>{5A2F4AD1-B3E2-4D49-A4E0-1E3A8C9AF761}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\Platform">
+      <UniqueIdentifier>{0E6F2D1B-72A4-4C96-A5AF-5C5AE5D7F019}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\Renderer">
+      <UniqueIdentifier>{8EC6B9F9-7D5E-4CEB-9E8A-9A9327A9771D}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\Game">
+      <UniqueIdentifier>{2B4B7254-6EEB-4F55-A92F-F8C1108D8CF1}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\Core">
+      <UniqueIdentifier>{4E42C46A-E710-4E42-9060-B39B68F3A1E6}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\Platform">
+      <UniqueIdentifier>{1131E845-3F59-4B0D-B8F7-BA92EDC9AC31}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\Renderer">
+      <UniqueIdentifier>{1AD5E6E5-1D65-45C5-A6B0-D9637D589DBB}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\Game">
+      <UniqueIdentifier>{E60E0C66-C5BB-4C6F-944A-40C4CB5752BF}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\ThirdParty">
+      <UniqueIdentifier>{D015B5FE-599B-43D3-BE45-0C3E410293C5}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\ThirdParty">
+      <UniqueIdentifier>{C54B013B-0DBA-42F4-9A64-6A6B9A6F987D}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Shaders">
+      <UniqueIdentifier>{65C94294-D320-4C69-87BA-B63560597729}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="..\ThirdParty\imgui\imgui.cpp">
+      <Filter>Source Files\ThirdParty</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ThirdParty\imgui\imgui_draw.cpp">
+      <Filter>Source Files\ThirdParty</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ThirdParty\imgui\imgui_tables.cpp">
+      <Filter>Source Files\ThirdParty</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ThirdParty\imgui\imgui_widgets.cpp">
+      <Filter>Source Files\ThirdParty</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ThirdParty\imgui\backends\imgui_impl_dx11.cpp">
+      <Filter>Source Files\ThirdParty</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ThirdParty\imgui\backends\imgui_impl_sdl3.cpp">
+      <Filter>Source Files\ThirdParty</Filter>
+    </ClCompile>
+    <ClCompile Include="main.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Renderer\d3d11_device.cpp">
+      <Filter>Source Files\Renderer</Filter>
+    </ClCompile>
+    <ClCompile Include="Renderer\fullscreen_pass.cpp">
+      <Filter>Source Files\Renderer</Filter>
+    </ClCompile>
+    <ClCompile Include="Renderer\shader.cpp">
+      <Filter>Source Files\Renderer</Filter>
+    </ClCompile>
+    <ClCompile Include="Renderer\scene_texture.cpp">
+      <Filter>Source Files\Renderer</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="..\ThirdParty\imgui\imgui.h">
+      <Filter>Header Files\ThirdParty</Filter>
+    </ClInclude>
+    <ClInclude Include="..\ThirdParty\imgui\backends\imgui_impl_dx11.h">
+      <Filter>Header Files\ThirdParty</Filter>
+    </ClInclude>
+    <ClInclude Include="..\ThirdParty\imgui\backends\imgui_impl_sdl3.h">
+      <Filter>Header Files\ThirdParty</Filter>
+    </ClInclude>
+    <ClInclude Include="Renderer\d3d11_device.h">
+      <Filter>Header Files\Renderer</Filter>
+    </ClInclude>
+    <ClInclude Include="Renderer\fullscreen_pass.h">
+      <Filter>Header Files\Renderer</Filter>
+    </ClInclude>
+    <ClInclude Include="Renderer\shader.h">
+      <Filter>Header Files\Renderer</Filter>
+    </ClInclude>
+    <ClInclude Include="Renderer\scene_texture.h">
+      <Filter>Header Files\Renderer</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Shaders\fullscreen.hlsl">
+      <Filter>Shaders</Filter>
+    </None>
+    <None Include="ThirdParty.props" />
+  </ItemGroup>
+</Project>
