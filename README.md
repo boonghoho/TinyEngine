@@ -10,4 +10,4 @@ Current focus:
 - ImGui brush controls
 - Flatland Radiance Cascades study prototype
 
-The current prototype lets the user paint emissive geometry into a `SceneTexture` and display it through a fullscreen HLSL pass. The next milestone is baseline raymarching over that scene texture.
+<img width="1270" height="738" alt="image" src="https://github.com/user-attachments/assets/02f9049d-d678-4a3e-a5f9-fa2ca919b33c" />
