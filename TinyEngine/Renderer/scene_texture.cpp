@@ -11,6 +11,13 @@ SceneTexture::~SceneTexture()
 
 bool SceneTexture::Initialize(ID3D11Device* Device, int InWidth, int InHeight)
 {
+    Release();
+
+    if (!Device || InWidth <= 0 || InHeight <= 0)
+    {
+        return false;
+    }
+
     Width = InWidth;
     Height = InHeight;
 
@@ -40,6 +47,7 @@ bool SceneTexture::Initialize(ID3D11Device* Device, int InWidth, int InHeight)
     if (FAILED(Result))
     {
         std::printf("CreateTexture2D failed: 0x%08X\n", Result);
+        Release();
         return false;
     }
 
@@ -57,6 +65,7 @@ bool SceneTexture::Initialize(ID3D11Device* Device, int InWidth, int InHeight)
     if (FAILED(Result))
     {
         std::printf("CreateShaderResourceView failed: 0x%08X\n", Result);
+        Release();
         return false;
     }
 

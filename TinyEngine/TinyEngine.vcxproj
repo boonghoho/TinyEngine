@@ -138,6 +138,7 @@
     <ClCompile Include="Renderer\fullscreen_pass.cpp" />
     <ClCompile Include="Renderer\shader.cpp" />
     <ClCompile Include="Renderer\scene_texture.cpp" />
+    <ClCompile Include="Renderer\render_texture.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\ThirdParty\imgui\imgui.h" />
@@ -147,9 +148,13 @@
     <ClInclude Include="Renderer\fullscreen_pass.h" />
     <ClInclude Include="Renderer\shader.h" />
     <ClInclude Include="Renderer\scene_texture.h" />
+    <ClInclude Include="Renderer\render_texture.h" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="Shaders\fullscreen.hlsl" />
+    <None Include="Shaders\display_texture.hlsl" />
+    <None Include="Shaders\rc_composite.hlsl" />
+    <None Include="Shaders\rc_gather.hlsl" />
+    <None Include="Shaders\rc_merge.hlsl" />
     <None Include="ThirdParty.props" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

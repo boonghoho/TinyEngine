@@ -11,6 +11,13 @@ FullscreenPass::~FullscreenPass()
 
 bool FullscreenPass::Initialize(ID3D11Device* Device, const wchar_t* ShaderPath)
 {
+    Release();
+
+    if (!Device || !ShaderPath)
+    {
+        return false;
+    }
+
     ID3DBlob* VertexShaderBlob = nullptr;
     ID3DBlob* PixelShaderBlob = nullptr;
 
@@ -53,6 +60,7 @@ bool FullscreenPass::Initialize(ID3D11Device* Device, const wchar_t* ShaderPath)
     if (FAILED(Result))
     {
         std::printf("CreatePixelShader failed: 0x%08X\n", Result);
+        Release();
         return false;
     }
 
@@ -70,6 +78,7 @@ bool FullscreenPass::Initialize(ID3D11Device* Device, const wchar_t* ShaderPath)
     if (FAILED(Result))
     {
         std::printf("CreateBuffer(FrameConstantBuffer) failed: 0x%08X\n", Result);
+        Release();
         return false;
     }
 
@@ -84,12 +93,13 @@ bool FullscreenPass::Initialize(ID3D11Device* Device, const wchar_t* ShaderPath)
 
     Result = Device->CreateSamplerState(
         &SamplerDesc,
-        &SceneSamplerState
+        &PointClampSamplerState
     );
 
     if (FAILED(Result))
     {
-        std::printf("CreateSamplerState(SceneSamplerState) failed: 0x%08X\n", Result);
+        std::printf("CreateSamplerState(PointClampSamplerState) failed: 0x%08X\n", Result);
+        Release();
         return false;
     }
 
@@ -98,10 +108,10 @@ bool FullscreenPass::Initialize(ID3D11Device* Device, const wchar_t* ShaderPath)
 
 void FullscreenPass::Release()
 {
-    if (SceneSamplerState)
+    if (PointClampSamplerState)
     {
-        SceneSamplerState->Release();
-        SceneSamplerState = nullptr;
+        PointClampSamplerState->Release();
+        PointClampSamplerState = nullptr;
     }
 
     if (FrameConstantBuffer)
@@ -130,7 +140,34 @@ void FullscreenPass::Render(
     float MouseX,
     float MouseY,
     float TimeSeconds,
-    ID3D11ShaderResourceView* SceneShaderResourceView
+    ID3D11ShaderResourceView* ShaderResourceView
+)
+{
+    Render(
+        DeviceContext,
+        Width,
+        Height,
+        MouseX,
+        MouseY,
+        TimeSeconds,
+        &ShaderResourceView,
+        1
+    );
+}
+
+void FullscreenPass::Render(
+    ID3D11DeviceContext* DeviceContext,
+    float Width,
+    float Height,
+    float MouseX,
+    float MouseY,
+    float TimeSeconds,
+    ID3D11ShaderResourceView* const* ShaderResourceViews,
+    unsigned int ShaderResourceViewCount,
+    float Param0,
+    float Param1,
+    float Param2,
+    float Param3
 )
 {
     FrameConstants Constants = {};
@@ -139,6 +176,10 @@ void FullscreenPass::Render(
     Constants.Mouse[0] = MouseX;
     Constants.Mouse[1] = MouseY;
     Constants.Time = TimeSeconds;
+    Constants.Param0 = Param0;
+    Constants.Param1 = Param1;
+    Constants.Param2 = Param2;
+    Constants.Param3 = Param3;
 
     DeviceContext->UpdateSubresource(
         FrameConstantBuffer,
@@ -155,11 +196,11 @@ void FullscreenPass::Render(
     DeviceContext->VSSetShader(VertexShader, nullptr, 0);
     DeviceContext->PSSetShader(PixelShader, nullptr, 0);
     DeviceContext->PSSetConstantBuffers(0, 1, &FrameConstantBuffer);
-    DeviceContext->PSSetShaderResources(0, 1, &SceneShaderResourceView);
-    DeviceContext->PSSetSamplers(0, 1, &SceneSamplerState);
+    DeviceContext->PSSetShaderResources(0, ShaderResourceViewCount, ShaderResourceViews);
+    DeviceContext->PSSetSamplers(0, 1, &PointClampSamplerState);
 
     DeviceContext->Draw(3, 0);
 
-    ID3D11ShaderResourceView* NullShaderResourceView = nullptr;
-    DeviceContext->PSSetShaderResources(0, 1, &NullShaderResourceView);
+    ID3D11ShaderResourceView* NullShaderResourceViews[8] = {};
+    DeviceContext->PSSetShaderResources(0, 8, NullShaderResourceViews);
 }

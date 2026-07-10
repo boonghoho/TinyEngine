@@ -81,6 +81,9 @@
     <ClCompile Include="Renderer\scene_texture.cpp">
       <Filter>Source Files\Renderer</Filter>
     </ClCompile>
+    <ClCompile Include="Renderer\render_texture.cpp">
+      <Filter>Source Files\Renderer</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\ThirdParty\imgui\imgui.h">
@@ -104,9 +107,21 @@
     <ClInclude Include="Renderer\scene_texture.h">
       <Filter>Header Files\Renderer</Filter>
     </ClInclude>
+    <ClInclude Include="Renderer\render_texture.h">
+      <Filter>Header Files\Renderer</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <None Include="Shaders\fullscreen.hlsl">
+    <None Include="Shaders\display_texture.hlsl">
+      <Filter>Shaders</Filter>
+    </None>
+    <None Include="Shaders\rc_composite.hlsl">
+      <Filter>Shaders</Filter>
+    </None>
+    <None Include="Shaders\rc_gather.hlsl">
+      <Filter>Shaders</Filter>
+    </None>
+    <None Include="Shaders\rc_merge.hlsl">
       <Filter>Shaders</Filter>
     </None>
     <None Include="ThirdParty.props" />

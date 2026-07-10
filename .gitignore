@@ -1,7 +1,5 @@
 .tools/
 .vs/
-.zig-cache-global/
-.zig-cache-local/
 x64/
 Docs/
 AGENTS.md

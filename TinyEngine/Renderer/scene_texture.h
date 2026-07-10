@@ -9,6 +9,7 @@
 #include <Windows.h>
 #include <d3d11.h>
 
+// NOTE(ljh): CPU에서 수정할 수 있는 Scene pixel을 저장하고 GPU Texture로 업로드한다.
 class SceneTexture
 {
 public:

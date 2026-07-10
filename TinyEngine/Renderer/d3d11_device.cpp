@@ -11,6 +11,13 @@ D3D11Device::~D3D11Device()
 
 bool D3D11Device::Initialize(HWND WindowHandle, int InWidth, int InHeight)
 {
+    Release();
+
+    if (!WindowHandle || InWidth <= 0 || InHeight <= 0)
+    {
+        return false;
+    }
+
     Width = InWidth;
     Height = InHeight;
 
@@ -45,23 +52,17 @@ bool D3D11Device::Initialize(HWND WindowHandle, int InWidth, int InHeight)
     if (FAILED(Result))
     {
         std::printf("D3D11CreateDeviceAndSwapChain failed: 0x%08X\n", Result);
+        Release();
         return false;
     }
 
     if (!CreateBackBufferRenderTarget())
     {
+        Release();
         return false;
     }
 
-    D3D11_VIEWPORT Viewport = {};
-    Viewport.TopLeftX = 0.0f;
-    Viewport.TopLeftY = 0.0f;
-    Viewport.Width = static_cast<float>(Width);
-    Viewport.Height = static_cast<float>(Height);
-    Viewport.MinDepth = 0.0f;
-    Viewport.MaxDepth = 1.0f;
-
-    DeviceContext->RSSetViewports(1, &Viewport);
+    SetViewport(Width, Height);
 
     return true;
 }
@@ -91,12 +92,37 @@ void D3D11Device::Release()
         Device->Release();
         Device = nullptr;
     }
+
+    Width = 0;
+    Height = 0;
 }
 
 void D3D11Device::BeginFrame(const float ClearColor[4])
 {
-    DeviceContext->OMSetRenderTargets(1, &BackBufferRenderTargetView, nullptr);
-    DeviceContext->ClearRenderTargetView(BackBufferRenderTargetView, ClearColor);
+    SetBackBufferRenderTarget();
+    ClearRenderTarget(BackBufferRenderTargetView, ClearColor);
+}
+
+void D3D11Device::SetBackBufferRenderTarget()
+{
+    SetRenderTarget(BackBufferRenderTargetView);
+}
+
+void D3D11Device::SetRenderTarget(ID3D11RenderTargetView* RenderTargetView)
+{
+    DeviceContext->OMSetRenderTargets(1, &RenderTargetView, nullptr);
+    SetViewport(Width, Height);
+}
+
+void D3D11Device::SetRenderTarget(ID3D11RenderTargetView* RenderTargetView, int RenderTargetWidth, int RenderTargetHeight)
+{
+    DeviceContext->OMSetRenderTargets(1, &RenderTargetView, nullptr);
+    SetViewport(RenderTargetWidth, RenderTargetHeight);
+}
+
+void D3D11Device::ClearRenderTarget(ID3D11RenderTargetView* RenderTargetView, const float ClearColor[4])
+{
+    DeviceContext->ClearRenderTargetView(RenderTargetView, ClearColor);
 }
 
 void D3D11Device::Present()
@@ -125,4 +151,17 @@ bool D3D11Device::CreateBackBufferRenderTarget()
     }
 
     return true;
+}
+
+void D3D11Device::SetViewport(int ViewportWidth, int ViewportHeight)
+{
+    D3D11_VIEWPORT Viewport = {};
+    Viewport.TopLeftX = 0.0f;
+    Viewport.TopLeftY = 0.0f;
+    Viewport.Width = static_cast<float>(ViewportWidth);
+    Viewport.Height = static_cast<float>(ViewportHeight);
+    Viewport.MinDepth = 0.0f;
+    Viewport.MaxDepth = 1.0f;
+
+    DeviceContext->RSSetViewports(1, &Viewport);
 }

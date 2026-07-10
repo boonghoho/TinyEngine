@@ -12,17 +12,15 @@
   - Source: `https://github.com/ocornut/imgui.git`
   - Branch: `docking`
   - Checked commit: `2af6dd9694288e6befe1edb7ce25510911693c22`
-- zigimg: `ThirdParty/zigimg`
-  - Source: `https://github.com/zigimg/zigimg.git`
-  - Branch: `master`
-  - Checked commit: `4cab5a17d4c76584723576fcc11497293c25d092`
 
 ## Visual Studio Setup
 
-`TinyEngine/ThirdParty.props`에서 include 경로만 연결한다.
+`TinyEngine/ThirdParty.props`에서 include 경로와 SDL3 library 경로를 연결한다.
 
 - `$(SolutionDir)ThirdParty\SDL3\include`
 - `$(SolutionDir)ThirdParty\imgui`
 - `$(SolutionDir)ThirdParty\imgui\backends`
 
-SDL3 빌드 방식, 라이브러리 링크, ImGui 백엔드 연결 코드는 아직 추가하지 않는다. 이 프로젝트는 학습용이므로 실제 초기화와 통합 구현은 사용자가 직접 진행한다.
+`ThirdParty/SDL3/VisualC/SDL.sln`을 열고 TinyEngine과 같은 Configuration과 Platform으로 `SDL` project를 먼저 build해야 한다. SDL test project는 TinyEngine build에 필요하지 않다. `ThirdParty.props`는 `SDL3.lib`를 link하고 build 후 `SDL3.dll`을 TinyEngine 출력 폴더로 복사한다.
+
+Dear ImGui core와 SDL3/DX11 backend source는 `TinyEngine.vcxproj`에서 TinyEngine과 함께 compile한다.

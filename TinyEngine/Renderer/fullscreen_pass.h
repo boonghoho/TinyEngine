@@ -1,7 +1,8 @@
-#pragma once
+﻿#pragma once
 
 #include <d3d11.h>
 
+// NOTE(ljh): 하나 이상의 Texture를 입력받아 Fullscreen Shader Pass를 실행한다.
 class FullscreenPass
 {
 public:
@@ -21,7 +22,22 @@ public:
         float MouseX,
         float MouseY,
         float TimeSeconds,
-        ID3D11ShaderResourceView* SceneShaderResourceView
+        ID3D11ShaderResourceView* ShaderResourceView
+    );
+
+    void Render(
+        ID3D11DeviceContext* DeviceContext,
+        float Width,
+        float Height,
+        float MouseX,
+        float MouseY,
+        float TimeSeconds,
+        ID3D11ShaderResourceView* const* ShaderResourceViews,
+        unsigned int ShaderResourceViewCount,
+        float Param0 = 0.0f,
+        float Param1 = 0.0f,
+        float Param2 = 0.0f,
+        float Param3 = 0.0f
     );
 
 private:
@@ -30,11 +46,15 @@ private:
         float Resolution[2];
         float Mouse[2];
         float Time;
+        float Param0;
+        float Param1;
+        float Param2;
+        float Param3;
         float Padding[3];
     };
 
     ID3D11VertexShader* VertexShader = nullptr;
     ID3D11PixelShader* PixelShader = nullptr;
     ID3D11Buffer* FrameConstantBuffer = nullptr;
-    ID3D11SamplerState* SceneSamplerState = nullptr;
+    ID3D11SamplerState* PointClampSamplerState = nullptr;
 };
