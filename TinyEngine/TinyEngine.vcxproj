@@ -133,9 +133,11 @@
     <ClCompile Include="..\ThirdParty\imgui\imgui_widgets.cpp" />
     <ClCompile Include="..\ThirdParty\imgui\backends\imgui_impl_dx11.cpp" />
     <ClCompile Include="..\ThirdParty\imgui\backends\imgui_impl_sdl3.cpp" />
+    <ClCompile Include="Editor\imgui_layer.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="Renderer\d3d11_device.cpp" />
     <ClCompile Include="Renderer\fullscreen_pass.cpp" />
+    <ClCompile Include="Renderer\radiance_cascade_renderer.cpp" />
     <ClCompile Include="Renderer\shader.cpp" />
     <ClCompile Include="Renderer\scene_texture.cpp" />
     <ClCompile Include="Renderer\render_texture.cpp" />
@@ -144,8 +146,10 @@
     <ClInclude Include="..\ThirdParty\imgui\imgui.h" />
     <ClInclude Include="..\ThirdParty\imgui\backends\imgui_impl_dx11.h" />
     <ClInclude Include="..\ThirdParty\imgui\backends\imgui_impl_sdl3.h" />
+    <ClInclude Include="Editor\imgui_layer.h" />
     <ClInclude Include="Renderer\d3d11_device.h" />
     <ClInclude Include="Renderer\fullscreen_pass.h" />
+    <ClInclude Include="Renderer\radiance_cascade_renderer.h" />
     <ClInclude Include="Renderer\shader.h" />
     <ClInclude Include="Renderer\scene_texture.h" />
     <ClInclude Include="Renderer\render_texture.h" />

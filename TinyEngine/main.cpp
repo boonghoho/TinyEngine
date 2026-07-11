@@ -7,12 +7,11 @@
 #include <SDL3/SDL_main.h>
 
 #include <imgui.h>
-#include <backends/imgui_impl_dx11.h>
-#include <backends/imgui_impl_sdl3.h>
 
+#include "Editor/imgui_layer.h"
 #include "Renderer/d3d11_device.h"
 #include "Renderer/fullscreen_pass.h"
-#include "Renderer/render_texture.h"
+#include "Renderer/radiance_cascade_renderer.h"
 #include "Renderer/scene_texture.h"
 
 #include <cstdint>
@@ -22,43 +21,10 @@ constexpr int WindowWidth = 1280;
 constexpr int WindowHeight = 720;
 constexpr float TargetFps = 144.0f;
 constexpr float FrameDelayMilliseconds = 1000.0f / TargetFps;
-// TODO(ljh): 해상도와 Cascade 설정을 외부에서 조정할 수 있도록 분리한다.
-constexpr int CascadeCount = 4;
-constexpr int BaseProbeSpacingPixels = 16;
-constexpr int BaseRaySide = 4;
 constexpr int ViewModeScene = 0;
 constexpr int ViewModeFirstCascade = 1;
-constexpr int ViewModeMerge = ViewModeFirstCascade + CascadeCount;
+constexpr int ViewModeMerge = ViewModeFirstCascade + RadianceCascadeRenderer::CascadeCount;
 constexpr int ViewModeFinal = ViewModeMerge + 1;
-
-int CeilDivide(int Value, int Divisor)
-{
-    return (Value + Divisor - 1) / Divisor;
-}
-
-int GetCascadeProbeSpacingPixels(int CascadeIndex)
-{
-    return BaseProbeSpacingPixels << CascadeIndex;
-}
-
-int GetCascadeRaySide(int CascadeIndex)
-{
-    return BaseRaySide << CascadeIndex;
-}
-
-int GetCascadeTextureWidth(int CascadeIndex)
-{
-    const int ProbeSpacingPixels = GetCascadeProbeSpacingPixels(CascadeIndex);
-    const int RaySide = GetCascadeRaySide(CascadeIndex);
-    return CeilDivide(WindowWidth, ProbeSpacingPixels) * RaySide;
-}
-
-int GetCascadeTextureHeight(int CascadeIndex)
-{
-    const int ProbeSpacingPixels = GetCascadeProbeSpacingPixels(CascadeIndex);
-    const int RaySide = GetCascadeRaySide(CascadeIndex);
-    return CeilDivide(WindowHeight, ProbeSpacingPixels) * RaySide;
-}
 
 void DrawDemoScene(SceneTexture& TargetSceneTexture)
 {
@@ -128,31 +94,9 @@ int main(int Argc, char** Argv)
         return 1;
     }
 
-    // TODO(ljh): RC Pass와 Texture 생명주기를 별도의 Renderer 클래스로 분리한다.
-    FullscreenPass GatherPass;
-    if (!GatherPass.Initialize(GraphicsDevice.GetDevice(), L"Shaders/rc_gather.hlsl"))
+    RadianceCascadeRenderer RadianceCascade;
+    if (!RadianceCascade.Initialize(GraphicsDevice.GetDevice(), WindowWidth, WindowHeight))
     {
-        GraphicsDevice.Release();
-        SDL_DestroyWindow(Window);
-        SDL_Quit();
-        return 1;
-    }
-
-    FullscreenPass MergePass;
-    if (!MergePass.Initialize(GraphicsDevice.GetDevice(), L"Shaders/rc_merge.hlsl"))
-    {
-        GatherPass.Release();
-        GraphicsDevice.Release();
-        SDL_DestroyWindow(Window);
-        SDL_Quit();
-        return 1;
-    }
-
-    FullscreenPass CompositePass;
-    if (!CompositePass.Initialize(GraphicsDevice.GetDevice(), L"Shaders/rc_composite.hlsl"))
-    {
-        MergePass.Release();
-        GatherPass.Release();
         GraphicsDevice.Release();
         SDL_DestroyWindow(Window);
         SDL_Quit();
@@ -162,9 +106,7 @@ int main(int Argc, char** Argv)
     FullscreenPass DisplayPass;
     if (!DisplayPass.Initialize(GraphicsDevice.GetDevice(), L"Shaders/display_texture.hlsl"))
     {
-        CompositePass.Release();
-        MergePass.Release();
-        GatherPass.Release();
+        RadianceCascade.Release();
         GraphicsDevice.Release();
         SDL_DestroyWindow(Window);
         SDL_Quit();
@@ -175,116 +117,22 @@ int main(int Argc, char** Argv)
     if (!RcSceneTexture.Initialize(GraphicsDevice.GetDevice(), WindowWidth, WindowHeight))
     {
         DisplayPass.Release();
-        CompositePass.Release();
-        MergePass.Release();
-        GatherPass.Release();
+        RadianceCascade.Release();
         GraphicsDevice.Release();
         SDL_DestroyWindow(Window);
         SDL_Quit();
         return 1;
     }
 
-    RenderTexture CascadeTextures[CascadeCount];
-    for (int CascadeIndex = 0; CascadeIndex < CascadeCount; ++CascadeIndex)
+    ImGuiLayer EditorGui;
+    if (!EditorGui.Initialize(
+            Window,
+            GraphicsDevice.GetDevice(),
+            GraphicsDevice.GetContext()))
     {
-        const int CascadeTextureWidth = GetCascadeTextureWidth(CascadeIndex);
-        const int CascadeTextureHeight = GetCascadeTextureHeight(CascadeIndex);
-
-        if (!CascadeTextures[CascadeIndex].Initialize(GraphicsDevice.GetDevice(), CascadeTextureWidth, CascadeTextureHeight))
-        {
-            for (int ReleaseIndex = 0; ReleaseIndex < CascadeCount; ++ReleaseIndex)
-            {
-                CascadeTextures[ReleaseIndex].Release();
-            }
-
-            RcSceneTexture.Release();
-            DisplayPass.Release();
-            CompositePass.Release();
-            MergePass.Release();
-            GatherPass.Release();
-            GraphicsDevice.Release();
-            SDL_DestroyWindow(Window);
-            SDL_Quit();
-            return 1;
-        }
-    }
-
-    RenderTexture MergedCascadeTextures[CascadeCount - 1];
-    for (int CascadeIndex = 0; CascadeIndex < CascadeCount - 1; ++CascadeIndex)
-    {
-        const int CascadeTextureWidth = GetCascadeTextureWidth(CascadeIndex);
-        const int CascadeTextureHeight = GetCascadeTextureHeight(CascadeIndex);
-
-        if (!MergedCascadeTextures[CascadeIndex].Initialize(GraphicsDevice.GetDevice(), CascadeTextureWidth, CascadeTextureHeight))
-        {
-            for (int ReleaseIndex = 0; ReleaseIndex < CascadeCount - 1; ++ReleaseIndex)
-            {
-                MergedCascadeTextures[ReleaseIndex].Release();
-            }
-
-            for (int ReleaseIndex = 0; ReleaseIndex < CascadeCount; ++ReleaseIndex)
-            {
-                CascadeTextures[ReleaseIndex].Release();
-            }
-
-            RcSceneTexture.Release();
-            DisplayPass.Release();
-            CompositePass.Release();
-            MergePass.Release();
-            GatherPass.Release();
-            GraphicsDevice.Release();
-            SDL_DestroyWindow(Window);
-            SDL_Quit();
-            return 1;
-        }
-    }
-
-    IMGUI_CHECKVERSION();
-    ImGui::CreateContext();
-    ImGui::StyleColorsDark();
-
-    if (!ImGui_ImplSDL3_InitForD3D(Window))
-    {
-        for (int CascadeIndex = 0; CascadeIndex < CascadeCount - 1; ++CascadeIndex)
-        {
-            MergedCascadeTextures[CascadeIndex].Release();
-        }
-
-        for (int CascadeIndex = 0; CascadeIndex < CascadeCount; ++CascadeIndex)
-        {
-            CascadeTextures[CascadeIndex].Release();
-        }
-
         RcSceneTexture.Release();
         DisplayPass.Release();
-        CompositePass.Release();
-        MergePass.Release();
-        GatherPass.Release();
-        GraphicsDevice.Release();
-        SDL_DestroyWindow(Window);
-        SDL_Quit();
-        return 1;
-    }
-
-    if (!ImGui_ImplDX11_Init(GraphicsDevice.GetDevice(), GraphicsDevice.GetContext()))
-    {
-        ImGui_ImplSDL3_Shutdown();
-        ImGui::DestroyContext();
-        for (int CascadeIndex = 0; CascadeIndex < CascadeCount - 1; ++CascadeIndex)
-        {
-            MergedCascadeTextures[CascadeIndex].Release();
-        }
-
-        for (int CascadeIndex = 0; CascadeIndex < CascadeCount; ++CascadeIndex)
-        {
-            CascadeTextures[CascadeIndex].Release();
-        }
-
-        RcSceneTexture.Release();
-        DisplayPass.Release();
-        CompositePass.Release();
-        MergePass.Release();
-        GatherPass.Release();
+        RadianceCascade.Release();
         GraphicsDevice.Release();
         SDL_DestroyWindow(Window);
         SDL_Quit();
@@ -312,7 +160,7 @@ int main(int Argc, char** Argv)
         SDL_Event Event;
         while (SDL_PollEvent(&Event))
         {
-            ImGui_ImplSDL3_ProcessEvent(&Event);
+            EditorGui.ProcessEvent(Event);
 
             if (Event.type == SDL_EVENT_QUIT)
             {
@@ -326,12 +174,12 @@ int main(int Argc, char** Argv)
 
             if (Event.type == SDL_EVENT_KEY_DOWN &&
                 Event.key.scancode == SDL_SCANCODE_C &&
-                !ImGui::GetIO().WantCaptureKeyboard)
+                !EditorGui.WantsKeyboard())
             {
                 RcSceneTexture.Clear();
             }
 
-            const bool bImGuiWantsMouse = ImGui::GetIO().WantCaptureMouse;
+            const bool bImGuiWantsMouse = EditorGui.WantsMouse();
 
             if (Event.type == SDL_EVENT_MOUSE_BUTTON_DOWN && !bImGuiWantsMouse)
             {
@@ -425,9 +273,7 @@ int main(int Argc, char** Argv)
         const float TimeSeconds = SDL_GetTicks() / 1000.0f;
         const float ClearColor[4] = { 0.0f, 0.0f, 0.0f, 1.0f };
 
-        ImGui_ImplDX11_NewFrame();
-        ImGui_ImplSDL3_NewFrame();
-        ImGui::NewFrame();
+        EditorGui.BeginFrame();
 
         ImGui::Begin("RC Paint");
         ImGui::ColorEdit3("Brush Color", BrushColor);
@@ -435,7 +281,7 @@ int main(int Argc, char** Argv)
         ImGui::SliderFloat("Indirect", &FinalIndirectStrength, 0.0f, 8.0f);
         ImGui::SliderFloat("Exposure", &FinalExposure, 0.2f, 3.0f);
         ImGui::RadioButton("Scene", &ViewMode, ViewModeScene);
-        for (int CascadeIndex = 0; CascadeIndex < CascadeCount; ++CascadeIndex)
+        for (int CascadeIndex = 0; CascadeIndex < RadianceCascadeRenderer::CascadeCount; ++CascadeIndex)
         {
             char CascadeLabel[8] = {};
             std::snprintf(CascadeLabel, sizeof(CascadeLabel), "C%d", CascadeIndex);
@@ -464,95 +310,22 @@ int main(int Argc, char** Argv)
         }
         ImGui::End();
 
-        ImGui::Render();
-
         // TODO(ljh): SceneTexture가 변경된 frame에만 GPU로 upload한다.
         RcSceneTexture.Upload(GraphicsDevice.GetContext());
-
-        for (int CascadeIndex = 0; CascadeIndex < CascadeCount; ++CascadeIndex)
-        {
-            GraphicsDevice.SetRenderTarget(
-                CascadeTextures[CascadeIndex].GetRenderTargetView(),
-                CascadeTextures[CascadeIndex].GetWidth(),
-                CascadeTextures[CascadeIndex].GetHeight()
-            );
-            GraphicsDevice.ClearRenderTarget(CascadeTextures[CascadeIndex].GetRenderTargetView(), ClearColor);
-
-            ID3D11ShaderResourceView* GatherInputs[] =
-            {
-                RcSceneTexture.GetShaderResourceView()
-            };
-
-            GatherPass.Render(
-                GraphicsDevice.GetContext(),
-                static_cast<float>(CascadeTextures[CascadeIndex].GetWidth()),
-                static_cast<float>(CascadeTextures[CascadeIndex].GetHeight()),
-                MouseX,
-                MouseY,
-                TimeSeconds,
-                GatherInputs,
-                1,
-                static_cast<float>(CascadeIndex),
-                static_cast<float>(GraphicsDevice.GetWidth()),
-                static_cast<float>(GraphicsDevice.GetHeight())
-            );
-        }
-
-        for (int CascadeIndex = CascadeCount - 2; CascadeIndex >= 0; --CascadeIndex)
-        {
-            RenderTexture& MergeTarget = MergedCascadeTextures[CascadeIndex];
-            ID3D11ShaderResourceView* FarCascade =
-                CascadeIndex == CascadeCount - 2
-                ? CascadeTextures[CascadeIndex + 1].GetShaderResourceView()
-                : MergedCascadeTextures[CascadeIndex + 1].GetShaderResourceView();
-
-            GraphicsDevice.SetRenderTarget(
-                MergeTarget.GetRenderTargetView(),
-                MergeTarget.GetWidth(),
-                MergeTarget.GetHeight()
-            );
-            GraphicsDevice.ClearRenderTarget(MergeTarget.GetRenderTargetView(), ClearColor);
-
-            ID3D11ShaderResourceView* MergeInputs[] =
-            {
-                FarCascade,
-                RcSceneTexture.GetShaderResourceView()
-            };
-
-            MergePass.Render(
-                GraphicsDevice.GetContext(),
-                static_cast<float>(MergeTarget.GetWidth()),
-                static_cast<float>(MergeTarget.GetHeight()),
-                MouseX,
-                MouseY,
-                TimeSeconds,
-                MergeInputs,
-                2,
-                static_cast<float>(CascadeIndex),
-                static_cast<float>(GraphicsDevice.GetWidth()),
-                static_cast<float>(GraphicsDevice.GetHeight())
-            );
-        }
+        RadianceCascade.GenerateLighting(
+            GraphicsDevice,
+            RcSceneTexture.GetShaderResourceView()
+        );
 
         GraphicsDevice.BeginFrame(ClearColor);
 
         if (ViewMode == ViewModeFinal)
         {
-            ID3D11ShaderResourceView* CompositeInputs[] =
-            {
-                RcSceneTexture.GetShaderResourceView(),
-                MergedCascadeTextures[0].GetShaderResourceView()
-            };
-
-            CompositePass.Render(
+            RadianceCascade.DrawFinal(
                 GraphicsDevice.GetContext(),
-                static_cast<float>(GraphicsDevice.GetWidth()),
-                static_cast<float>(GraphicsDevice.GetHeight()),
-                MouseX,
-                MouseY,
-                TimeSeconds,
-                CompositeInputs,
-                2,
+                RcSceneTexture.GetShaderResourceView(),
+                GraphicsDevice.GetWidth(),
+                GraphicsDevice.GetHeight(),
                 FinalIndirectStrength,
                 FinalExposure
             );
@@ -562,14 +335,14 @@ int main(int Argc, char** Argv)
             ID3D11ShaderResourceView* DisplayTexture = RcSceneTexture.GetShaderResourceView();
 
             if (ViewMode >= ViewModeFirstCascade &&
-                ViewMode < ViewModeFirstCascade + CascadeCount)
+                ViewMode < ViewModeFirstCascade + RadianceCascadeRenderer::CascadeCount)
             {
                 const int CascadeIndex = ViewMode - ViewModeFirstCascade;
-                DisplayTexture = CascadeTextures[CascadeIndex].GetShaderResourceView();
+                DisplayTexture = RadianceCascade.GetCascadeShaderResourceView(CascadeIndex);
             }
             else if (ViewMode == ViewModeMerge)
             {
-                DisplayTexture = MergedCascadeTextures[0].GetShaderResourceView();
+                DisplayTexture = RadianceCascade.GetMergedShaderResourceView();
             }
 
             DisplayPass.Render(
@@ -583,7 +356,7 @@ int main(int Argc, char** Argv)
             );
         }
 
-        ImGui_ImplDX11_RenderDrawData(ImGui::GetDrawData());
+        EditorGui.EndFrame();
         GraphicsDevice.Present();
 
         const Uint64 FrameEndTime = SDL_GetTicks();
@@ -595,24 +368,10 @@ int main(int Argc, char** Argv)
         }
     }
 
-    ImGui_ImplDX11_Shutdown();
-    ImGui_ImplSDL3_Shutdown();
-    ImGui::DestroyContext();
-    for (int CascadeIndex = 0; CascadeIndex < CascadeCount - 1; ++CascadeIndex)
-    {
-        MergedCascadeTextures[CascadeIndex].Release();
-    }
-
-    for (int CascadeIndex = 0; CascadeIndex < CascadeCount; ++CascadeIndex)
-    {
-        CascadeTextures[CascadeIndex].Release();
-    }
-
+    EditorGui.Release();
     RcSceneTexture.Release();
     DisplayPass.Release();
-    CompositePass.Release();
-    MergePass.Release();
-    GatherPass.Release();
+    RadianceCascade.Release();
     GraphicsDevice.Release();
     SDL_DestroyWindow(Window);
     SDL_Quit();

@@ -25,6 +25,9 @@
     <Filter Include="Source Files\Game">
       <UniqueIdentifier>{2B4B7254-6EEB-4F55-A92F-F8C1108D8CF1}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Source Files\Editor">
+      <UniqueIdentifier>{922C6995-BBCA-4C24-9BA5-5C7A3B198944}</UniqueIdentifier>
+    </Filter>
     <Filter Include="Header Files\Core">
       <UniqueIdentifier>{4E42C46A-E710-4E42-9060-B39B68F3A1E6}</UniqueIdentifier>
     </Filter>
@@ -36,6 +39,9 @@
     </Filter>
     <Filter Include="Header Files\Game">
       <UniqueIdentifier>{E60E0C66-C5BB-4C6F-944A-40C4CB5752BF}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\Editor">
+      <UniqueIdentifier>{830C7AA4-F2C3-4BA7-BA6D-1281A780C615}</UniqueIdentifier>
     </Filter>
     <Filter Include="Source Files\ThirdParty">
       <UniqueIdentifier>{D015B5FE-599B-43D3-BE45-0C3E410293C5}</UniqueIdentifier>
@@ -66,6 +72,9 @@
     <ClCompile Include="..\ThirdParty\imgui\backends\imgui_impl_sdl3.cpp">
       <Filter>Source Files\ThirdParty</Filter>
     </ClCompile>
+    <ClCompile Include="Editor\imgui_layer.cpp">
+      <Filter>Source Files\Editor</Filter>
+    </ClCompile>
     <ClCompile Include="main.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -73,6 +82,9 @@
       <Filter>Source Files\Renderer</Filter>
     </ClCompile>
     <ClCompile Include="Renderer\fullscreen_pass.cpp">
+      <Filter>Source Files\Renderer</Filter>
+    </ClCompile>
+    <ClCompile Include="Renderer\radiance_cascade_renderer.cpp">
       <Filter>Source Files\Renderer</Filter>
     </ClCompile>
     <ClCompile Include="Renderer\shader.cpp">
@@ -95,10 +107,16 @@
     <ClInclude Include="..\ThirdParty\imgui\backends\imgui_impl_sdl3.h">
       <Filter>Header Files\ThirdParty</Filter>
     </ClInclude>
+    <ClInclude Include="Editor\imgui_layer.h">
+      <Filter>Header Files\Editor</Filter>
+    </ClInclude>
     <ClInclude Include="Renderer\d3d11_device.h">
       <Filter>Header Files\Renderer</Filter>
     </ClInclude>
     <ClInclude Include="Renderer\fullscreen_pass.h">
+      <Filter>Header Files\Renderer</Filter>
+    </ClInclude>
+    <ClInclude Include="Renderer\radiance_cascade_renderer.h">
       <Filter>Header Files\Renderer</Filter>
     </ClInclude>
     <ClInclude Include="Renderer\shader.h">
