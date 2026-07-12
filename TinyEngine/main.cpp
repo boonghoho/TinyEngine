@@ -13,6 +13,7 @@
 #include "Renderer/fullscreen_pass.h"
 #include "Renderer/radiance_cascade_renderer.h"
 #include "Renderer/scene_texture.h"
+#include "Memory/memory_arena.h"
 
 #include <cstdint>
 #include <cstdio>
