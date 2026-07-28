@@ -1,6 +1,7 @@
 ﻿#pragma once
 
 #include <cstddef>
+#include <limits>
 
 // REFERENCE(ljh): Memory arena 학습 및 구현 참고 자료
 // - Ryan Fleury memory management talk: https://www.youtube.com/watch?v=UeJPyuVxL-o
@@ -24,7 +25,17 @@ public:
     // NOTE(ljh): 정렬된 raw memory만 반환한다. 객체의 생성자와 소멸자는 호출하지 않는다.
     void* AllocateBytes(std::size_t Size, std::size_t Alignment = alignof(std::max_align_t));
 
-    // TODO(ljh): 타입과 개수를 받아 연속된 메모리를 할당하는 AllocateArray<T>()를 추가한다.
+	// NOTE(ljh): 정렬된 객체의 raw memory만 반환한다. 객체의 생성자와 소멸자는 호출하지 않는다.
+    template<typename T>
+    T* AllocateArray(std::size_t Count)
+    {
+        if (Count == 0 ||Count > std::numeric_limits<std::size_t>::max() / sizeof(T))
+        {
+            return nullptr;
+        }
+
+        return static_cast<T*>(AllocateBytes(sizeof(T) * Count, alignof(T)));
+	}
 
     Marker GetMarker() const;
 
