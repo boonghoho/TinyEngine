@@ -96,6 +96,9 @@
     <ClCompile Include="Renderer\render_texture.cpp">
       <Filter>Source Files\Renderer</Filter>
     </ClCompile>
+    <ClCompile Include="Renderer\sprite_renderer.cpp">
+      <Filter>Source Files\Renderer</Filter>
+    </ClCompile>
     <ClCompile Include="Memory\memory_arena.cpp">
       <Filter>Source Files\Core</Filter>
     </ClCompile>
@@ -131,6 +134,9 @@
     <ClInclude Include="Renderer\render_texture.h">
       <Filter>Header Files\Renderer</Filter>
     </ClInclude>
+    <ClInclude Include="Renderer\sprite_renderer.h">
+      <Filter>Header Files\Renderer</Filter>
+    </ClInclude>
     <ClInclude Include="Memory\memory_arena.h">
       <Filter>Header Files\Core</Filter>
     </ClInclude>
@@ -146,6 +152,9 @@
       <Filter>Shaders</Filter>
     </None>
     <None Include="Shaders\rc_merge.hlsl">
+      <Filter>Shaders</Filter>
+    </None>
+    <None Include="Shaders\sprite.hlsl">
       <Filter>Shaders</Filter>
     </None>
     <None Include="ThirdParty.props" />

@@ -195,6 +195,11 @@ void FullscreenPass::Render(
 
     DeviceContext->VSSetShader(VertexShader, nullptr, 0);
     DeviceContext->PSSetShader(PixelShader, nullptr, 0);
+    
+    // 이전 pass가 남긴 alpha blend state를 이어받지 않는다.
+    // nullptr은 blending이 꺼진 D3D11 기본 blend state다.
+    DeviceContext->OMSetBlendState(nullptr, nullptr, 0xFFFFFFFF);
+
     DeviceContext->PSSetConstantBuffers(0, 1, &FrameConstantBuffer);
     DeviceContext->PSSetShaderResources(0, ShaderResourceViewCount, ShaderResourceViews);
     DeviceContext->PSSetSamplers(0, 1, &PointClampSamplerState);

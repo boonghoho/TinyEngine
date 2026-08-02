@@ -34,11 +34,17 @@ bool D3D11Device::Initialize(HWND WindowHandle, int InWidth, int InHeight)
 
     D3D_FEATURE_LEVEL FeatureLevel = D3D_FEATURE_LEVEL_11_0;
 
+    UINT DeviceCreationFlags = 0;
+
+#if defined(_DEBUG)
+    DeviceCreationFlags |= D3D11_CREATE_DEVICE_DEBUG;
+#endif
+
     HRESULT Result = D3D11CreateDeviceAndSwapChain(
         nullptr,
         D3D_DRIVER_TYPE_HARDWARE,
         nullptr,
-        0,
+        DeviceCreationFlags,
         &FeatureLevel,
         1,
         D3D11_SDK_VERSION,

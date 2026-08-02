@@ -13,6 +13,7 @@
 #include "Renderer/fullscreen_pass.h"
 #include "Renderer/radiance_cascade_renderer.h"
 #include "Renderer/scene_texture.h"
+#include "Renderer/sprite_renderer.h"
 #include "Memory/memory_arena.h"
 
 #include <cstdint>
@@ -117,6 +118,18 @@ int main(int Argc, char** Argv)
     SceneTexture RcSceneTexture;
     if (!RcSceneTexture.Initialize(GraphicsDevice.GetDevice(), WindowWidth, WindowHeight))
     {
+        DisplayPass.Release();
+        RadianceCascade.Release();
+        GraphicsDevice.Release();
+        SDL_DestroyWindow(Window);
+        SDL_Quit();
+        return 1;
+    }
+
+    SpriteRenderer SpritePreviewRenderer;
+    if (!SpritePreviewRenderer.Initialize(GraphicsDevice.GetDevice(), WindowWidth, WindowHeight))
+    {
+        RcSceneTexture.Release();
         DisplayPass.Release();
         RadianceCascade.Release();
         GraphicsDevice.Release();
@@ -354,6 +367,20 @@ int main(int Argc, char** Argv)
                 MouseY,
                 TimeSeconds,
                 DisplayTexture
+            );
+        }
+
+        // TODO(ljh): 지금은 SpriteRenderer의 동작을 확인하기 위한 raw scene 미리보기다.
+        // 나중에는 GameObject의 Transform과 SpriteComponent가 이 값을 넘긴다.
+        if (ViewMode == ViewModeFinal)
+        {
+            SpritePreviewRenderer.RenderSprite(
+                GraphicsDevice.GetContext(),
+                RcSceneTexture.GetShaderResourceView(),
+                24.0f,
+                24.0f,
+                320.0f,
+                180.0f
             );
         }
 
