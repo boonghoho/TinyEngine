@@ -2,6 +2,9 @@
 
 #include <cstdio>
 
+namespace tiny
+{
+
 RenderTexture::~RenderTexture()
 {
     Release();
@@ -114,4 +117,6 @@ ID3D11RenderTargetView* RenderTexture::GetRenderTargetView() const
 ID3D11ShaderResourceView* RenderTexture::GetShaderResourceView() const
 {
     return ShaderResourceView;
+}
+
 }

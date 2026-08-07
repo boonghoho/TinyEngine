@@ -8,6 +8,7 @@
 
 #include <imgui.h>
 
+#include "Core/types.h"
 #include "Editor/imgui_layer.h"
 #include "Renderer/d3d11_device.h"
 #include "Renderer/fullscreen_pass.h"
@@ -16,20 +17,19 @@
 #include "Renderer/sprite_renderer.h"
 #include "Memory/memory_arena.h"
 
-#include <cstdint>
 #include <cstdio>
 #include "Renderer/texture2d.h"
 
-constexpr int WindowWidth = 1280;
-constexpr int WindowHeight = 720;
-constexpr float TargetFps = 144.0f;
-constexpr float FrameDelayMilliseconds = 1000.0f / TargetFps;
+constexpr tiny::i32 WindowWidth = 1280;
+constexpr tiny::i32 WindowHeight = 720;
+constexpr tiny::f32 TargetFps = 144.0f;
+constexpr tiny::f32 FrameDelayMilliseconds = 1000.0f / TargetFps;
 constexpr int ViewModeScene = 0;
 constexpr int ViewModeFirstCascade = 1;
-constexpr int ViewModeMerge = ViewModeFirstCascade + RadianceCascadeRenderer::CascadeCount;
+constexpr int ViewModeMerge = ViewModeFirstCascade + tiny::RadianceCascadeRenderer::CascadeCount;
 constexpr int ViewModeFinal = ViewModeMerge + 1;
 
-void DrawDemoScene(SceneTexture& TargetSceneTexture)
+void DrawDemoScene(tiny::SceneTexture& TargetSceneTexture)
 {
     TargetSceneTexture.Clear();
 
@@ -89,7 +89,7 @@ int main(int Argc, char** Argv)
         return 1;
     }
 
-    D3D11Device GraphicsDevice;
+    tiny::D3D11Device GraphicsDevice;
     if (!GraphicsDevice.Initialize(WindowHandle, WindowWidth, WindowHeight))
     {
         SDL_DestroyWindow(Window);
@@ -97,7 +97,7 @@ int main(int Argc, char** Argv)
         return 1;
     }
 
-    RadianceCascadeRenderer RadianceCascade;
+    tiny::RadianceCascadeRenderer RadianceCascade;
     if (!RadianceCascade.Initialize(GraphicsDevice.GetDevice(), WindowWidth, WindowHeight))
     {
         GraphicsDevice.Release();
@@ -106,7 +106,7 @@ int main(int Argc, char** Argv)
         return 1;
     }
 
-    FullscreenPass DisplayPass;
+    tiny::FullscreenPass DisplayPass;
     if (!DisplayPass.Initialize(GraphicsDevice.GetDevice(), L"Shaders/display_texture.hlsl"))
     {
         RadianceCascade.Release();
@@ -116,7 +116,7 @@ int main(int Argc, char** Argv)
         return 1;
     }
 
-    SceneTexture RcSceneTexture;
+    tiny::SceneTexture RcSceneTexture;
     if (!RcSceneTexture.Initialize(GraphicsDevice.GetDevice(), WindowWidth, WindowHeight))
     {
         DisplayPass.Release();
@@ -128,7 +128,7 @@ int main(int Argc, char** Argv)
     }
 
     // NOTE(ljh): Sprite Renderer test code
-    SpriteRenderer SpritePreviewRenderer;
+    tiny::SpriteRenderer SpritePreviewRenderer;
     if (!SpritePreviewRenderer.Initialize(GraphicsDevice.GetDevice(), WindowWidth, WindowHeight))
     {
         RcSceneTexture.Release();
@@ -141,14 +141,14 @@ int main(int Argc, char** Argv)
     }
 
     // NOTE(ljh): Texture2D test code
-    Texture2D MagicatTexture;
+    tiny::Texture2D MagicatTexture;
 
     if (!MagicatTexture.LoadFromFile(GraphicsDevice.GetDevice(), "../Assets/magicat.png"))
     {
         return 1;
     }
 
-    ImGuiLayer EditorGui;
+    tiny::ImGuiLayer EditorGui;
     if (!EditorGui.Initialize(
             Window,
             GraphicsDevice.GetDevice(),
@@ -209,9 +209,9 @@ int main(int Argc, char** Argv)
             {
                 const int MouseX = static_cast<int>(Event.button.x);
                 const int MouseY = static_cast<int>(Event.button.y);
-                const std::uint8_t BrushColorR = static_cast<std::uint8_t>(BrushColor[0] * 255.0f);
-                const std::uint8_t BrushColorG = static_cast<std::uint8_t>(BrushColor[1] * 255.0f);
-                const std::uint8_t BrushColorB = static_cast<std::uint8_t>(BrushColor[2] * 255.0f);
+                const tiny::u8 BrushColorR = static_cast<tiny::u8>(BrushColor[0] * 255.0f);
+                const tiny::u8 BrushColorG = static_cast<tiny::u8>(BrushColor[1] * 255.0f);
+                const tiny::u8 BrushColorB = static_cast<tiny::u8>(BrushColor[2] * 255.0f);
 
                 LastMouseX = MouseX;
                 LastMouseY = MouseY;
@@ -253,9 +253,9 @@ int main(int Argc, char** Argv)
             {
                 const int MouseX = static_cast<int>(Event.motion.x);
                 const int MouseY = static_cast<int>(Event.motion.y);
-                const std::uint8_t BrushColorR = static_cast<std::uint8_t>(BrushColor[0] * 255.0f);
-                const std::uint8_t BrushColorG = static_cast<std::uint8_t>(BrushColor[1] * 255.0f);
-                const std::uint8_t BrushColorB = static_cast<std::uint8_t>(BrushColor[2] * 255.0f);
+                const tiny::u8 BrushColorR = static_cast<tiny::u8>(BrushColor[0] * 255.0f);
+                const tiny::u8 BrushColorG = static_cast<tiny::u8>(BrushColor[1] * 255.0f);
+                const tiny::u8 BrushColorB = static_cast<tiny::u8>(BrushColor[2] * 255.0f);
 
                 if (bLeftMouseDown)
                 {
@@ -305,7 +305,7 @@ int main(int Argc, char** Argv)
         ImGui::SliderFloat("Indirect", &FinalIndirectStrength, 0.0f, 8.0f);
         ImGui::SliderFloat("Exposure", &FinalExposure, 0.2f, 3.0f);
         ImGui::RadioButton("Scene", &ViewMode, ViewModeScene);
-        for (int CascadeIndex = 0; CascadeIndex < RadianceCascadeRenderer::CascadeCount; ++CascadeIndex)
+        for (int CascadeIndex = 0; CascadeIndex < tiny::RadianceCascadeRenderer::CascadeCount; ++CascadeIndex)
         {
             char CascadeLabel[8] = {};
             std::snprintf(CascadeLabel, sizeof(CascadeLabel), "C%d", CascadeIndex);
@@ -359,7 +359,7 @@ int main(int Argc, char** Argv)
             ID3D11ShaderResourceView* DisplayTexture = RcSceneTexture.GetShaderResourceView();
 
             if (ViewMode >= ViewModeFirstCascade &&
-                ViewMode < ViewModeFirstCascade + RadianceCascadeRenderer::CascadeCount)
+                ViewMode < ViewModeFirstCascade + tiny::RadianceCascadeRenderer::CascadeCount)
             {
                 const int CascadeIndex = ViewMode - ViewModeFirstCascade;
                 DisplayTexture = RadianceCascade.GetCascadeShaderResourceView(CascadeIndex);

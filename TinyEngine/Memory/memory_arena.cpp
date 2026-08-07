@@ -7,6 +7,9 @@
 
 #include <limits>
 
+namespace tiny
+{
+
 namespace
 {
     bool IsPowerOfTwo(std::size_t Value)
@@ -243,5 +246,7 @@ std::size_t MemoryArena::GetReservedSize() const
 std::size_t MemoryArena::GetHighWaterMark() const
 {
     return HighWaterMark;
+}
+
 }
 

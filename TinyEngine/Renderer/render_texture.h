@@ -3,6 +3,9 @@
 #include <d3d11.h>
 
 // NOTE(ljh): GPU가 렌더링 결과를 쓰고, 다른 Shader가 다시 읽을 수 있는 Texture를 관리한다.
+namespace tiny
+{
+
 class RenderTexture
 {
 public:
@@ -28,3 +31,5 @@ private:
     ID3D11RenderTargetView* RenderTargetView = nullptr;
     ID3D11ShaderResourceView* ShaderResourceView = nullptr;
 };
+
+}

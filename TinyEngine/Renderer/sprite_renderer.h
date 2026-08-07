@@ -4,6 +4,9 @@
 #include <wrl/client.h>
 
 // NOTE(ljh): 텍스처에서 사용할 정규화된 영역이다. 전체 텍스처는 { 0, 0, 1, 1 }이다.
+namespace tiny
+{
+
 struct UVRect
 {
     float U0 = 0.0f;
@@ -64,3 +67,5 @@ private:
     Microsoft::WRL::ComPtr<ID3D11DepthStencilState> DepthDisabledState;
     Microsoft::WRL::ComPtr<ID3D11RasterizerState> CullNoneRasterizerState;
 };
+
+}

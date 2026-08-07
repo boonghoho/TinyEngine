@@ -5,6 +5,9 @@
 
 #include <array>
 
+namespace tiny
+{
+
 class D3D11Device;
 
 // NOTE(ljh): Radiance Cascades에 필요한 Pass와 중간 Texture를 소유하고 실행한다.
@@ -56,3 +59,5 @@ private:
     std::array<RenderTexture, CascadeCount> CascadeTextures;
     std::array<RenderTexture, CascadeCount - 1> MergedCascadeTextures;
 };
+
+}

@@ -7,6 +7,9 @@
 #include <d3d11.h>
 
 // NOTE(ljh): D3D11 핵심 객체를 소유하고, Render Target 설정과 화면 출력을 관리한다.
+namespace tiny
+{
+
 class D3D11Device
 {
 public:
@@ -43,3 +46,5 @@ private:
     int Width = 0;
     int Height = 0;
 };
+
+}

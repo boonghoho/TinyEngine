@@ -4,6 +4,9 @@
 #include <cstdio>
 #include <cstdlib>
 
+namespace tiny
+{
+
 SceneTexture::~SceneTexture()
 {
     Release();
@@ -174,4 +177,6 @@ void SceneTexture::Upload(ID3D11DeviceContext* DeviceContext)
         Width * 4,
         0
     );
+}
+
 }

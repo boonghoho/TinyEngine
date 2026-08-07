@@ -4,6 +4,9 @@
 
 #include <cstdio>
 
+namespace tiny
+{
+
 FullscreenPass::~FullscreenPass()
 {
     Release();
@@ -208,4 +211,6 @@ void FullscreenPass::Render(
 
     ID3D11ShaderResourceView* NullShaderResourceViews[8] = {};
     DeviceContext->PSSetShaderResources(0, 8, NullShaderResourceViews);
+}
+
 }

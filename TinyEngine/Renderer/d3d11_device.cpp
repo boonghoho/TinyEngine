@@ -4,6 +4,9 @@
 
 #pragma comment(lib, "d3d11.lib")
 
+namespace tiny
+{
+
 D3D11Device::~D3D11Device()
 {
     Release();
@@ -170,4 +173,6 @@ void D3D11Device::SetViewport(int ViewportWidth, int ViewportHeight)
     Viewport.MaxDepth = 1.0f;
 
     DeviceContext->RSSetViewports(1, &Viewport);
+}
+
 }

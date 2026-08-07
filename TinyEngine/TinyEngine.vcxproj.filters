@@ -119,6 +119,9 @@
     <ClInclude Include="..\ThirdParty\imgui\backends\imgui_impl_sdl3.h">
       <Filter>Header Files\ThirdParty</Filter>
     </ClInclude>
+    <ClInclude Include="Core\types.h">
+      <Filter>Header Files\Core</Filter>
+    </ClInclude>
     <ClInclude Include="Editor\imgui_layer.h">
       <Filter>Header Files\Editor</Filter>
     </ClInclude>

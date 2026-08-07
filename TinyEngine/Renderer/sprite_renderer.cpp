@@ -7,6 +7,9 @@
 #include <cstdio>
 #include <cstring>
 
+namespace tiny
+{
+
 bool SpriteRenderer::Initialize(ID3D11Device* Device, int InSceneWidth, int InSceneHeight)
 {
     if (!Device || InSceneWidth <= 0 || InSceneHeight <= 0)
@@ -269,4 +272,6 @@ void SpriteRenderer::RenderSprite(
 
     ID3D11ShaderResourceView* NullTexture = nullptr;
     DeviceContext->PSSetShaderResources(0, 1, &NullTexture);
+}
+
 }

@@ -5,6 +5,9 @@ struct ID3D11DeviceContext;
 struct SDL_Window;
 union SDL_Event;
 
+namespace tiny
+{
+
 // NOTE(ljh): Dear ImGui Context와 SDL3/DX11 Backend의 생명주기를 관리한다.
 class ImGuiLayer
 {
@@ -34,3 +37,5 @@ private:
     bool bSdlBackendInitialized = false;
     bool bDx11BackendInitialized = false;
 };
+
+}

@@ -10,6 +10,9 @@
 #include <cstdio>
 #include <limits>
 
+namespace tiny
+{
+
 bool Texture2D::LoadFromFile(ID3D11Device* Device, const char* FilePath)
 {
     Texture.Reset();
@@ -100,4 +103,6 @@ bool Texture2D::LoadFromFile(ID3D11Device* Device, const char* FilePath)
     Width = ImageWidth;
     Height = ImageHeight;
     return true;
+}
+
 }

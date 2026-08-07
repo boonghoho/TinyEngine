@@ -6,6 +6,9 @@
 #include <backends/imgui_impl_dx11.h>
 #include <backends/imgui_impl_sdl3.h>
 
+namespace tiny
+{
+
 ImGuiLayer::~ImGuiLayer()
 {
     Release();
@@ -116,4 +119,6 @@ bool ImGuiLayer::WantsMouse() const
 bool ImGuiLayer::WantsKeyboard() const
 {
     return bHasContext && ImGui::GetIO().WantCaptureKeyboard;
+}
+
 }

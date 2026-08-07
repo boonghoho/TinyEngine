@@ -3,6 +3,9 @@
 #include <d3d11.h>
 
 // NOTE(ljh): 하나 이상의 Texture를 입력받아 Fullscreen Shader Pass를 실행한다.
+namespace tiny
+{
+
 class FullscreenPass
 {
 public:
@@ -58,3 +61,5 @@ private:
     ID3D11Buffer* FrameConstantBuffer = nullptr;
     ID3D11SamplerState* PointClampSamplerState = nullptr;
 };
+
+}

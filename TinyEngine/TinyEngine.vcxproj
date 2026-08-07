@@ -154,6 +154,7 @@
     <ClInclude Include="..\ThirdParty\stb\stb_image.h" />
     <ClInclude Include="..\ThirdParty\imgui\backends\imgui_impl_dx11.h" />
     <ClInclude Include="..\ThirdParty\imgui\backends\imgui_impl_sdl3.h" />
+    <ClInclude Include="Core\types.h" />
     <ClInclude Include="Editor\imgui_layer.h" />
     <ClInclude Include="Memory\memory_arena.h" />
     <ClInclude Include="Renderer\d3d11_device.h" />

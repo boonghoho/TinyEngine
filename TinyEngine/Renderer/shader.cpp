@@ -5,6 +5,9 @@
 
 #pragma comment(lib, "d3dcompiler.lib")
 
+namespace tiny
+{
+
 bool CompileShaderFromFile(
     const wchar_t* FilePath,
     const char* EntryPoint,
@@ -39,4 +42,6 @@ bool CompileShaderFromFile(
     }
 
     return true;
+}
+
 }

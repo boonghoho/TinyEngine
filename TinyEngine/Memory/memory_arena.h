@@ -7,6 +7,9 @@
 // - Ryan Fleury memory management talk: https://www.youtube.com/watch?v=UeJPyuVxL-o
 // - RAD Debugger arena implementation: https://github.com/EpicGames/raddebugger/blob/master/src/base/base_arena.c
 
+namespace tiny
+{
+
 class MemoryArena
 {
 public:
@@ -63,4 +66,6 @@ private:
 
     std::size_t HighWaterMark = 0;
 };
+
+}
 

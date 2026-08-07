@@ -2,6 +2,9 @@
 
 #include "d3d11_device.h"
 
+namespace tiny
+{
+
 namespace
 {
     int CeilDivide(int Value, int Divisor)
@@ -223,4 +226,6 @@ int RadianceCascadeRenderer::GetCascadeTextureHeight(int CascadeIndex) const
     const int ProbeSpacingPixels = BaseProbeSpacingPixels << CascadeIndex;
     const int RaySide = BaseRaySide << CascadeIndex;
     return CeilDivide(SceneHeight, ProbeSpacingPixels) * RaySide;
+}
+
 }

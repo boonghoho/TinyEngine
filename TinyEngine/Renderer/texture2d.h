@@ -3,6 +3,9 @@
 #include <d3d11.h>
 #include <wrl/client.h>
 
+namespace tiny
+{
+
 class Texture2D
 {
 public:
@@ -25,3 +28,5 @@ private:
     int Width = 0;
     int Height = 0;
 };
+
+}
