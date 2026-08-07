@@ -18,6 +18,7 @@
 
 #include <cstdint>
 #include <cstdio>
+#include "Renderer/texture2d.h"
 
 constexpr int WindowWidth = 1280;
 constexpr int WindowHeight = 720;
@@ -126,6 +127,7 @@ int main(int Argc, char** Argv)
         return 1;
     }
 
+    // NOTE(ljh): Sprite Renderer test code
     SpriteRenderer SpritePreviewRenderer;
     if (!SpritePreviewRenderer.Initialize(GraphicsDevice.GetDevice(), WindowWidth, WindowHeight))
     {
@@ -135,6 +137,14 @@ int main(int Argc, char** Argv)
         GraphicsDevice.Release();
         SDL_DestroyWindow(Window);
         SDL_Quit();
+        return 1;
+    }
+
+    // NOTE(ljh): Texture2D test code
+    Texture2D MagicatTexture;
+
+    if (!MagicatTexture.LoadFromFile(GraphicsDevice.GetDevice(), "../Assets/magicat.png"))
+    {
         return 1;
     }
 
@@ -370,19 +380,13 @@ int main(int Argc, char** Argv)
             );
         }
 
-        // TODO(ljh): 지금은 SpriteRenderer의 동작을 확인하기 위한 raw scene 미리보기다.
-        // 나중에는 GameObject의 Transform과 SpriteComponent가 이 값을 넘긴다.
-        if (ViewMode == ViewModeFinal)
-        {
-            SpritePreviewRenderer.RenderSprite(
-                GraphicsDevice.GetContext(),
-                RcSceneTexture.GetShaderResourceView(),
-                24.0f,
-                24.0f,
-                320.0f,
-                180.0f
-            );
-        }
+        // TODO(ljh): 지금은 SpriteRenderer 와 Texture2D 구현을 확인하기 위해 임시로 사용.
+        SpritePreviewRenderer.RenderSprite(
+            GraphicsDevice.GetContext(),
+            MagicatTexture.GetShaderResourceView(),
+            24.0f, 24.0f,
+            150.0f, 150.0f
+        );
 
         EditorGui.EndFrame();
         GraphicsDevice.Present();

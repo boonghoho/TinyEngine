@@ -147,9 +147,11 @@
     <ClCompile Include="Renderer\scene_texture.cpp" />
     <ClCompile Include="Renderer\render_texture.cpp" />
     <ClCompile Include="Renderer\sprite_renderer.cpp" />
+    <ClCompile Include="Renderer\texture2d.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\ThirdParty\imgui\imgui.h" />
+    <ClInclude Include="..\ThirdParty\stb\stb_image.h" />
     <ClInclude Include="..\ThirdParty\imgui\backends\imgui_impl_dx11.h" />
     <ClInclude Include="..\ThirdParty\imgui\backends\imgui_impl_sdl3.h" />
     <ClInclude Include="Editor\imgui_layer.h" />
@@ -161,6 +163,7 @@
     <ClInclude Include="Renderer\scene_texture.h" />
     <ClInclude Include="Renderer\render_texture.h" />
     <ClInclude Include="Renderer\sprite_renderer.h" />
+    <ClInclude Include="Renderer\texture2d.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include="Shaders\display_texture.hlsl" />

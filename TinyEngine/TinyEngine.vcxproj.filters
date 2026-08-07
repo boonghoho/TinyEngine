@@ -102,9 +102,15 @@
     <ClCompile Include="Memory\memory_arena.cpp">
       <Filter>Source Files\Core</Filter>
     </ClCompile>
+    <ClCompile Include="Renderer\texture2d.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\ThirdParty\imgui\imgui.h">
+      <Filter>Header Files\ThirdParty</Filter>
+    </ClInclude>
+    <ClInclude Include="..\ThirdParty\stb\stb_image.h">
       <Filter>Header Files\ThirdParty</Filter>
     </ClInclude>
     <ClInclude Include="..\ThirdParty\imgui\backends\imgui_impl_dx11.h">
@@ -139,6 +145,9 @@
     </ClInclude>
     <ClInclude Include="Memory\memory_arena.h">
       <Filter>Header Files\Core</Filter>
+    </ClInclude>
+    <ClInclude Include="Renderer\texture2d.h">
+      <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

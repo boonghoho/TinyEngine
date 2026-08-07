@@ -1,4 +1,4 @@
-#include "fullscreen_pass.h"
+ï»¿#include "fullscreen_pass.h"
 
 #include "shader.h"
 
@@ -196,8 +196,8 @@ void FullscreenPass::Render(
     DeviceContext->VSSetShader(VertexShader, nullptr, 0);
     DeviceContext->PSSetShader(PixelShader, nullptr, 0);
     
-    // ÀÌÀü pass°¡ ³²±ä alpha blend state¸¦ ÀÌ¾î¹ÞÁö ¾Ê´Â´Ù.
-    // nullptrÀº blendingÀÌ ²¨Áø D3D11 ±âº» blend state´Ù.
+    // ì´ì „ passê°€ ë‚¨ê¸´ alpha blend stateë¥¼ ì´ì–´ë°›ì§€ ì•ŠëŠ”ë‹¤.
+    // nullptrì€ blendingì´ êº¼ì§„ D3D11 ê¸°ë³¸ blend stateë‹¤.
     DeviceContext->OMSetBlendState(nullptr, nullptr, 0xFFFFFFFF);
 
     DeviceContext->PSSetConstantBuffers(0, 1, &FrameConstantBuffer);
