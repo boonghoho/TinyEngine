@@ -35,7 +35,7 @@ public:
 
     bool Initialize(ID3D11Device* Device, int SceneWidth, int SceneHeight);
 
-    void RenderSprite(
+    void Render(
         ID3D11DeviceContext* DeviceContext,
         ID3D11ShaderResourceView* TextureSRV,
         float X,

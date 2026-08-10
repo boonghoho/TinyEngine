@@ -16,6 +16,7 @@
 #include "Renderer/scene_texture.h"
 #include "Renderer/sprite_renderer.h"
 #include "Memory/memory_arena.h"
+#include "Level/level.h"
 
 #include <cstdio>
 #include "Renderer/texture2d.h"
@@ -66,8 +67,7 @@ int main(int Argc, char** Argv)
         "TinyEngine",
         WindowWidth,
         WindowHeight,
-        0
-    );
+        0);
 
     if (Window == nullptr)
     {
@@ -78,8 +78,7 @@ int main(int Argc, char** Argv)
 
     SDL_PropertiesID WindowProperties = SDL_GetWindowProperties(Window);
     HWND WindowHandle = static_cast<HWND>(
-        SDL_GetPointerProperty(WindowProperties, SDL_PROP_WINDOW_WIN32_HWND_POINTER, nullptr)
-    );
+        SDL_GetPointerProperty(WindowProperties, SDL_PROP_WINDOW_WIN32_HWND_POINTER, nullptr));
 
     if (WindowHandle == nullptr)
     {
@@ -127,9 +126,8 @@ int main(int Argc, char** Argv)
         return 1;
     }
 
-    // NOTE(ljh): Sprite Renderer test code
-    tiny::SpriteRenderer SpritePreviewRenderer;
-    if (!SpritePreviewRenderer.Initialize(GraphicsDevice.GetDevice(), WindowWidth, WindowHeight))
+    tiny::SpriteRenderer SpriteRenderer;
+    if (!SpriteRenderer.Initialize(GraphicsDevice.GetDevice(), WindowWidth, WindowHeight))
     {
         RcSceneTexture.Release();
         DisplayPass.Release();
@@ -140,13 +138,29 @@ int main(int Argc, char** Argv)
         return 1;
     }
 
-    // NOTE(ljh): Texture2D test code
+    // NOTE(ljh): 현재는 내가 예전에 만든 Magicat 이미지를 사용한다.
+    // 나중에 메인 캐릭터는 다른 스프라이트를, 맵은 Tiled JSON을 통해 불러오도록 할 예정.
     tiny::Texture2D MagicatTexture;
 
     if (!MagicatTexture.LoadFromFile(GraphicsDevice.GetDevice(), "../Assets/magicat.png"))
     {
         return 1;
     }
+
+    tiny::Level GameLevel;
+
+    tiny::Entity& Cat = GameLevel.CreateEntity();
+
+    Cat.Transform.X = 500.0f;
+    Cat.Transform.Y = 100.0f;
+    Cat.Transform.ScaleX = 1.0f;
+    Cat.Transform.ScaleY = 1.0f;
+
+    Cat.SpriteComponent.emplace();
+
+    Cat.SpriteComponent->Texture = &MagicatTexture;
+    Cat.SpriteComponent->Width = 150.0f;
+    Cat.SpriteComponent->Height = 150.0f;
 
     tiny::ImGuiLayer EditorGui;
     if (!EditorGui.Initialize(
@@ -170,7 +184,7 @@ int main(int Argc, char** Argv)
     int LastMouseY = 0;
 
     int BrushRadius = 8;
-    float BrushColor[3] = { 1.0f, 0.70f, 0.16f };
+    float BrushColor[3] = {1.0f, 0.70f, 0.16f};
     float FinalIndirectStrength = 1.0f;
     float FinalExposure = 1.2f;
     int ViewMode = ViewModeFinal;
@@ -225,8 +239,7 @@ int main(int Argc, char** Argv)
                         BrushRadius,
                         BrushColorR,
                         BrushColorG,
-                        BrushColorB
-                    );
+                        BrushColorB);
                 }
 
                 if (Event.button.button == SDL_BUTTON_RIGHT)
@@ -267,8 +280,7 @@ int main(int Argc, char** Argv)
                         BrushRadius,
                         BrushColorR,
                         BrushColorG,
-                        BrushColorB
-                    );
+                        BrushColorB);
                 }
 
                 if (bEraseMouseDown)
@@ -281,8 +293,7 @@ int main(int Argc, char** Argv)
                         BrushRadius,
                         0,
                         0,
-                        0
-                    );
+                        0);
                 }
 
                 LastMouseX = MouseX;
@@ -295,7 +306,7 @@ int main(int Argc, char** Argv)
         SDL_GetMouseState(&MouseX, &MouseY);
 
         const float TimeSeconds = SDL_GetTicks() / 1000.0f;
-        const float ClearColor[4] = { 0.0f, 0.0f, 0.0f, 1.0f };
+        const float ClearColor[4] = {0.0f, 0.0f, 0.0f, 1.0f};
 
         EditorGui.BeginFrame();
 
@@ -314,8 +325,7 @@ int main(int Argc, char** Argv)
             ImGui::RadioButton(
                 CascadeLabel,
                 &ViewMode,
-                ViewModeFirstCascade + CascadeIndex
-            );
+                ViewModeFirstCascade + CascadeIndex);
         }
 
         ImGui::SameLine();
@@ -338,8 +348,7 @@ int main(int Argc, char** Argv)
         RcSceneTexture.Upload(GraphicsDevice.GetContext());
         RadianceCascade.GenerateLighting(
             GraphicsDevice,
-            RcSceneTexture.GetShaderResourceView()
-        );
+            RcSceneTexture.GetShaderResourceView());
 
         GraphicsDevice.BeginFrame(ClearColor);
 
@@ -351,8 +360,7 @@ int main(int Argc, char** Argv)
                 GraphicsDevice.GetWidth(),
                 GraphicsDevice.GetHeight(),
                 FinalIndirectStrength,
-                FinalExposure
-            );
+                FinalExposure);
         }
         else
         {
@@ -376,17 +384,32 @@ int main(int Argc, char** Argv)
                 MouseX,
                 MouseY,
                 TimeSeconds,
-                DisplayTexture
-            );
+                DisplayTexture);
         }
 
-        // TODO(ljh): 지금은 SpriteRenderer 와 Texture2D 구현을 확인하기 위해 임시로 사용.
-        SpritePreviewRenderer.RenderSprite(
-            GraphicsDevice.GetContext(),
-            MagicatTexture.GetShaderResourceView(),
-            24.0f, 24.0f,
-            150.0f, 150.0f
-        );
+        // NOTE(ljh): 현재 GameLevel의 Entity를 순회하며 SpriteComponent가 있는 경우 SpriteRenderer를 통해 화면에 렌더링한다.
+        for (const tiny::Entity& CurrentEntity : GameLevel.GetEntities())
+        {
+            if (!CurrentEntity.SpriteComponent)
+            {
+                continue;
+            }
+
+            const tiny::Sprite& CurrentSprite = *CurrentEntity.SpriteComponent;
+
+            if (CurrentSprite.Texture == nullptr)
+            {
+                continue;
+            }
+
+            SpriteRenderer.Render(
+                GraphicsDevice.GetContext(),
+                CurrentSprite.Texture->GetShaderResourceView(),
+                CurrentEntity.Transform.X,
+                CurrentEntity.Transform.Y,
+                CurrentSprite.Width * CurrentEntity.Transform.ScaleX,
+                CurrentSprite.Height * CurrentEntity.Transform.ScaleY);
+        }
 
         EditorGui.EndFrame();
         GraphicsDevice.Present();

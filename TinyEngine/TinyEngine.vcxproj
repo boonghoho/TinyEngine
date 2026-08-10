@@ -138,6 +138,7 @@
     <ClCompile Include="..\ThirdParty\imgui\backends\imgui_impl_dx11.cpp" />
     <ClCompile Include="..\ThirdParty\imgui\backends\imgui_impl_sdl3.cpp" />
     <ClCompile Include="Editor\imgui_layer.cpp" />
+    <ClCompile Include="Level\level.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="Memory\memory_arena.cpp" />
     <ClCompile Include="Renderer\d3d11_device.cpp" />
@@ -156,6 +157,10 @@
     <ClInclude Include="..\ThirdParty\imgui\backends\imgui_impl_sdl3.h" />
     <ClInclude Include="Core\types.h" />
     <ClInclude Include="Editor\imgui_layer.h" />
+    <ClInclude Include="Level\Components\sprite.h" />
+    <ClInclude Include="Level\Components\transform2d.h" />
+    <ClInclude Include="Level\entity.h" />
+    <ClInclude Include="Level\level.h" />
     <ClInclude Include="Memory\memory_arena.h" />
     <ClInclude Include="Renderer\d3d11_device.h" />
     <ClInclude Include="Renderer\fullscreen_pass.h" />

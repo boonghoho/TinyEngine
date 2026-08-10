@@ -28,6 +28,9 @@
     <Filter Include="Source Files\Editor">
       <UniqueIdentifier>{922C6995-BBCA-4C24-9BA5-5C7A3B198944}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Source Files\Level">
+      <UniqueIdentifier>{F91B34A7-8A3C-4C0D-92BE-24E4A1C5E701}</UniqueIdentifier>
+    </Filter>
     <Filter Include="Header Files\Core">
       <UniqueIdentifier>{4E42C46A-E710-4E42-9060-B39B68F3A1E6}</UniqueIdentifier>
     </Filter>
@@ -42,6 +45,12 @@
     </Filter>
     <Filter Include="Header Files\Editor">
       <UniqueIdentifier>{830C7AA4-F2C3-4BA7-BA6D-1281A780C615}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\Level">
+      <UniqueIdentifier>{6D90BF2C-E738-44C3-82F9-73AA90B6D911}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\Level\Components">
+      <UniqueIdentifier>{1320B83F-7AA7-4A2D-AE96-6DE6E2B7C815}</UniqueIdentifier>
     </Filter>
     <Filter Include="Source Files\ThirdParty">
       <UniqueIdentifier>{D015B5FE-599B-43D3-BE45-0C3E410293C5}</UniqueIdentifier>
@@ -74,6 +83,9 @@
     </ClCompile>
     <ClCompile Include="Editor\imgui_layer.cpp">
       <Filter>Source Files\Editor</Filter>
+    </ClCompile>
+    <ClCompile Include="Level\level.cpp">
+      <Filter>Source Files\Level</Filter>
     </ClCompile>
     <ClCompile Include="main.cpp">
       <Filter>Source Files</Filter>
@@ -124,6 +136,18 @@
     </ClInclude>
     <ClInclude Include="Editor\imgui_layer.h">
       <Filter>Header Files\Editor</Filter>
+    </ClInclude>
+    <ClInclude Include="Level\Components\sprite.h">
+      <Filter>Header Files\Level\Components</Filter>
+    </ClInclude>
+    <ClInclude Include="Level\Components\transform2d.h">
+      <Filter>Header Files\Level\Components</Filter>
+    </ClInclude>
+    <ClInclude Include="Level\entity.h">
+      <Filter>Header Files\Level</Filter>
+    </ClInclude>
+    <ClInclude Include="Level\level.h">
+      <Filter>Header Files\Level</Filter>
     </ClInclude>
     <ClInclude Include="Renderer\d3d11_device.h">
       <Filter>Header Files\Renderer</Filter>

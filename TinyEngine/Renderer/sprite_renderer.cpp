@@ -202,7 +202,7 @@ bool SpriteRenderer::Initialize(ID3D11Device* Device, int InSceneWidth, int InSc
 }
 
 
-void SpriteRenderer::RenderSprite(
+void SpriteRenderer::Render(
     ID3D11DeviceContext* DeviceContext,
     ID3D11ShaderResourceView* TextureSRV,
     float X,

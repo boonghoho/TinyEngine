@@ -1,0 +1,54 @@
+---
+Language: Cpp
+BasedOnStyle: Microsoft
+
+# TinyEngine uses four spaces and never inserts tabs.
+IndentWidth: 4
+ContinuationIndentWidth: 4
+TabWidth: 4
+UseTab: Never
+
+# Keep namespace contents aligned with the namespace declaration.
+NamespaceIndentation: None
+FixNamespaceComments: false
+CompactNamespaces: false
+
+# Match the project's Allman-style braces and class layout.
+BreakBeforeBraces: Allman
+IndentAccessModifiers: false
+AccessModifierOffset: -4
+IndentCaseLabels: false
+IndentCaseBlocks: false
+IndentPPDirectives: None
+
+# Match declarations such as `Texture2D* Texture` and `Entity& EntityRef`.
+DerivePointerAlignment: false
+PointerAlignment: Left
+ReferenceAlignment: Left
+SpaceBeforeParens: ControlStatements
+
+# Preserve the project's multiline call and expression layout.
+AlignAfterOpenBracket: DontAlign
+AlignOperands: Align
+BreakBeforeBinaryOperators: None
+BreakBeforeTernaryOperators: true
+BinPackArguments: false
+BinPackParameters: false
+
+# Keep inline getters compact without collapsing regular functions or blocks.
+AllowShortFunctionsOnASingleLine: InlineOnly
+AllowShortBlocksOnASingleLine: Never
+AllowShortIfStatementsOnASingleLine: Never
+AllowShortLoopsOnASingleLine: false
+
+# Avoid unrelated rewrites when formatting existing engine code.
+ColumnLimit: 0
+ReflowComments: false
+MaxEmptyLinesToKeep: 1
+SortIncludes: Never
+IncludeBlocks: Preserve
+SortUsingDeclarations: Never
+SeparateDefinitionBlocks: Leave
+
+Standard: c++20
+...
