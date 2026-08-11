@@ -138,6 +138,8 @@
     <ClCompile Include="..\ThirdParty\imgui\backends\imgui_impl_dx11.cpp" />
     <ClCompile Include="..\ThirdParty\imgui\backends\imgui_impl_sdl3.cpp" />
     <ClCompile Include="Editor\imgui_layer.cpp" />
+    <ClCompile Include="Game\player_controller.cpp" />
+    <ClCompile Include="Input\input.cpp" />
     <ClCompile Include="Level\level.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="Memory\memory_arena.cpp" />
@@ -155,8 +157,11 @@
     <ClInclude Include="..\ThirdParty\stb\stb_image.h" />
     <ClInclude Include="..\ThirdParty\imgui\backends\imgui_impl_dx11.h" />
     <ClInclude Include="..\ThirdParty\imgui\backends\imgui_impl_sdl3.h" />
+    <ClInclude Include="Core\math_types.h" />
     <ClInclude Include="Core\types.h" />
     <ClInclude Include="Editor\imgui_layer.h" />
+    <ClInclude Include="Game\player_controller.h" />
+    <ClInclude Include="Input\input.h" />
     <ClInclude Include="Level\Components\sprite.h" />
     <ClInclude Include="Level\Components\transform2d.h" />
     <ClInclude Include="Level\entity.h" />

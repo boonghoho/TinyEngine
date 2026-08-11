@@ -10,16 +10,18 @@
 
 #include "Core/types.h"
 #include "Editor/imgui_layer.h"
+#include "Game/player_controller.h"
+#include "Input/input.h"
+#include "Level/level.h"
+#include "Memory/memory_arena.h"
 #include "Renderer/d3d11_device.h"
 #include "Renderer/fullscreen_pass.h"
 #include "Renderer/radiance_cascade_renderer.h"
 #include "Renderer/scene_texture.h"
 #include "Renderer/sprite_renderer.h"
-#include "Memory/memory_arena.h"
-#include "Level/level.h"
+#include "Renderer/texture2d.h"
 
 #include <cstdio>
-#include "Renderer/texture2d.h"
 
 constexpr tiny::i32 WindowWidth = 1280;
 constexpr tiny::i32 WindowHeight = 720;
@@ -150,6 +152,7 @@ int main(int Argc, char** Argv)
     tiny::Level GameLevel;
 
     tiny::Entity& Cat = GameLevel.CreateEntity();
+    const tiny::u32 CatID = Cat.ID;
 
     Cat.Transform.X = 500.0f;
     Cat.Transform.Y = 100.0f;
@@ -190,31 +193,29 @@ int main(int Argc, char** Argv)
     int ViewMode = ViewModeFinal;
 
     bool bIsRunning = true;
+    Uint64 PreviousFrameTime = SDL_GetTicks();
+
+    tiny::Input GameInput;
+    tiny::PlayerController CatController;
 
     while (bIsRunning)
     {
         const Uint64 FrameStartTime = SDL_GetTicks();
+        const tiny::f32 DeltaSeconds =
+            static_cast<tiny::f32>(FrameStartTime - PreviousFrameTime) / 1000.0f;
+        PreviousFrameTime = FrameStartTime;
+
+        GameInput.BeginFrame();
 
         SDL_Event Event;
         while (SDL_PollEvent(&Event))
         {
             EditorGui.ProcessEvent(Event);
+            GameInput.ProcessEvent(Event);
 
             if (Event.type == SDL_EVENT_QUIT)
             {
                 bIsRunning = false;
-            }
-
-            if (Event.type == SDL_EVENT_KEY_DOWN && Event.key.key == SDLK_ESCAPE)
-            {
-                bIsRunning = false;
-            }
-
-            if (Event.type == SDL_EVENT_KEY_DOWN &&
-                Event.key.scancode == SDL_SCANCODE_C &&
-                !EditorGui.WantsKeyboard())
-            {
-                RcSceneTexture.Clear();
             }
 
             const bool bImGuiWantsMouse = EditorGui.WantsMouse();
@@ -309,6 +310,24 @@ int main(int Argc, char** Argv)
         const float ClearColor[4] = {0.0f, 0.0f, 0.0f, 1.0f};
 
         EditorGui.BeginFrame();
+
+        if (GameInput.WasPressed(SDL_SCANCODE_ESCAPE))
+        {
+            bIsRunning = false;
+        }
+
+        if (!EditorGui.WantsKeyboard())
+        {
+            if (GameInput.WasPressed(SDL_SCANCODE_C))
+            {
+                RcSceneTexture.Clear();
+            }
+
+            if (tiny::Entity* Player = GameLevel.GetEntityByID(CatID))
+            {
+                CatController.Update(*Player, GameInput, DeltaSeconds);
+            }
+        }
 
         ImGui::Begin("RC Paint");
         ImGui::ColorEdit3("Brush Color", BrushColor);
