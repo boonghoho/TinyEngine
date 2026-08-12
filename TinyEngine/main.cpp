@@ -141,7 +141,6 @@ int main(int Argc, char** Argv)
     }
 
     // NOTE(ljh): 현재는 내가 예전에 만든 Magicat 이미지를 사용한다.
-    // 나중에 메인 캐릭터는 다른 스프라이트를, 맵은 Tiled JSON을 통해 불러오도록 할 예정.
     tiny::Texture2D MagicatTexture;
 
     if (!MagicatTexture.LoadFromFile(GraphicsDevice.GetDevice(), "../Assets/magicat.png"))
@@ -150,6 +149,12 @@ int main(int Argc, char** Argv)
     }
 
     tiny::Level GameLevel;
+
+    // NOTE(ljh): 현재 tiled 로 만든 임의의 맵을 불러온다.
+    if (!GameLevel.Initialize(GraphicsDevice.GetDevice(), "../Assets/Maps/dungeon_001.json"))
+    {
+        return 1;
+    }
 
     tiny::Entity& Cat = GameLevel.CreateEntity();
     const tiny::u32 CatID = Cat.ID;
@@ -162,8 +167,8 @@ int main(int Argc, char** Argv)
     Cat.SpriteComponent.emplace();
 
     Cat.SpriteComponent->Texture = &MagicatTexture;
-    Cat.SpriteComponent->Width = 150.0f;
-    Cat.SpriteComponent->Height = 150.0f;
+    Cat.SpriteComponent->Width = 75.0f;
+    Cat.SpriteComponent->Height = 75.0f;
 
     tiny::ImGuiLayer EditorGui;
     if (!EditorGui.Initialize(
@@ -405,6 +410,8 @@ int main(int Argc, char** Argv)
                 TimeSeconds,
                 DisplayTexture);
         }
+
+        GameLevel.RenderTileMap(GraphicsDevice.GetContext(), SpriteRenderer);
 
         // NOTE(ljh): 현재 GameLevel의 Entity를 순회하며 SpriteComponent가 있는 경우 SpriteRenderer를 통해 화면에 렌더링한다.
         for (const tiny::Entity& CurrentEntity : GameLevel.GetEntities())

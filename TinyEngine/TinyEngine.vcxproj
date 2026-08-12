@@ -153,6 +153,7 @@
     <ClCompile Include="Renderer\texture2d.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="..\ThirdParty\nlohmann\json.hpp" />
     <ClInclude Include="..\ThirdParty\imgui\imgui.h" />
     <ClInclude Include="..\ThirdParty\stb\stb_image.h" />
     <ClInclude Include="..\ThirdParty\imgui\backends\imgui_impl_dx11.h" />
@@ -177,6 +178,7 @@
     <ClInclude Include="Renderer\texture2d.h" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="..\ThirdParty\nlohmann\LICENSE.MIT" />
     <None Include="Shaders\display_texture.hlsl" />
     <None Include="Shaders\rc_composite.hlsl" />
     <None Include="Shaders\rc_gather.hlsl" />

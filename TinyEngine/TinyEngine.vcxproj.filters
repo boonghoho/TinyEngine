@@ -131,6 +131,9 @@
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="..\ThirdParty\nlohmann\json.hpp">
+      <Filter>Header Files\ThirdParty</Filter>
+    </ClInclude>
     <ClInclude Include="..\ThirdParty\imgui\imgui.h">
       <Filter>Header Files\ThirdParty</Filter>
     </ClInclude>
@@ -199,6 +202,7 @@
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
+    <None Include="..\ThirdParty\nlohmann\LICENSE.MIT" />
     <None Include="Shaders\display_texture.hlsl">
       <Filter>Shaders</Filter>
     </None>
