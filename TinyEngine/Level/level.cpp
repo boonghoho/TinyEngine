@@ -75,6 +75,62 @@ bool Level::Initialize(ID3D11Device* Device, const char* MapFilePath)
         // NOTE(ljh): Tiled의 tile layer data는 row-major 순서의 GID(Global Tile ID) 배열로 저장된다.
         TileGIDs = Layer.at("data").get<std::vector<u32>>();
 
+        Colliders.clear();
+
+        // NOTE(ljh): Objects layer의 Collider 사각형은 회전 없는 world-space AABB로 저장한다.
+        for (const nlohmann::json& CurrentLayer : Layers)
+        {
+            if (CurrentLayer.value("type", "") != "objectgroup" ||
+                CurrentLayer.value("name", "") != "Objects")
+            {
+                continue;
+            }
+
+            const nlohmann::json& Objects = CurrentLayer.at("objects");
+            if (!Objects.is_array())
+            {
+                std::printf("Invalid Tiled object layer\n");
+                return false;
+            }
+
+            for (const nlohmann::json& Object : Objects)
+            {
+                if (Object.value("type", "") != "Collider")
+                {
+                    continue;
+                }
+
+                const f32 X = Object.at("x").get<f32>();
+                const f32 Y = Object.at("y").get<f32>();
+                const f32 Width = Object.at("width").get<f32>();
+                const f32 Height = Object.at("height").get<f32>();
+                const f32 Rotation = Object.value("rotation", 0.0f);
+
+                const bool bIsUnsupportedShape =
+                    Object.contains("ellipse") ||
+                    Object.contains("point") ||
+                    Object.contains("polygon") ||
+                    Object.contains("polyline") ||
+                    Object.contains("gid") ||
+                    Object.contains("text") ||
+                    Object.contains("template") ||
+                    Object.contains("capsule");
+
+                if (Width <= 0.0f || Height <= 0.0f || Rotation != 0.0f || bIsUnsupportedShape)
+                {
+                    std::printf("Unsupported Tiled Collider object\n");
+                    return false;
+                }
+
+                Colliders.push_back({
+                    {X, Y},
+                    {X + Width, Y + Height},
+                });
+            }
+
+            break;
+        }
+
         const std::size_t ExpectedTileCount = static_cast<std::size_t>(MapWidth) * static_cast<std::size_t>(MapHeight);
 
         if (MapWidth <= 0 || MapHeight <= 0 ||
@@ -117,7 +173,12 @@ bool Level::Initialize(ID3D11Device* Device, const char* MapFilePath)
             return false;
         }
 
-        std::printf("Loaded Tiled map: %s (%dx%d tiles)\n", MapFilePath, MapWidth, MapHeight);
+        std::printf(
+            "Loaded Tiled map: %s (%dx%d tiles, %zu colliders)\n",
+            MapFilePath,
+            MapWidth,
+            MapHeight,
+            Colliders.size());
 
         return true;
     }
@@ -125,6 +186,7 @@ bool Level::Initialize(ID3D11Device* Device, const char* MapFilePath)
     {
         std::printf("Failed to parse Tiled map: %s\n", Error.what());
         TileGIDs.clear();
+        Colliders.clear();
 
         return false;
     }

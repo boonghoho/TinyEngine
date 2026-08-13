@@ -9,7 +9,76 @@
 namespace tiny
 {
 
-void PlayerController::Update(Entity& Player, const Input& GameInput, f32 DeltaSeconds) const
+namespace
+{
+
+AABB GetPlayerBounds(const Entity& Player)
+{
+    if (!Player.SpriteComponent)
+    {
+        const Vec2 Position = {Player.Transform.X, Player.Transform.Y};
+        return {Position, Position};
+    }
+
+    const Sprite& PlayerSprite = *Player.SpriteComponent;
+    const f32 Width = PlayerSprite.Width * Player.Transform.ScaleX;
+    const f32 Height = PlayerSprite.Height * Player.Transform.ScaleY;
+
+    return {
+        {Player.Transform.X, Player.Transform.Y},
+        {Player.Transform.X + Width, Player.Transform.Y + Height},
+    };
+}
+
+void MoveAlongX(Entity& Player, f32 DeltaX, const std::vector<AABB>& Colliders)
+{
+    Player.Transform.X += DeltaX;
+
+    for (const AABB& Collider : Colliders)
+    {
+        const AABB PlayerBounds = GetPlayerBounds(Player);
+        if (!PlayerBounds.Intersects(Collider))
+        {
+            continue;
+        }
+
+        if (DeltaX > 0.0f)
+        {
+            Player.Transform.X += Collider.Min.X - PlayerBounds.Max.X;
+        }
+        else if (DeltaX < 0.0f)
+        {
+            Player.Transform.X += Collider.Max.X - PlayerBounds.Min.X;
+        }
+    }
+}
+
+void MoveAlongY(Entity& Player, f32 DeltaY, const std::vector<AABB>& Colliders)
+{
+    Player.Transform.Y += DeltaY;
+
+    for (const AABB& Collider : Colliders)
+    {
+        const AABB PlayerBounds = GetPlayerBounds(Player);
+        if (!PlayerBounds.Intersects(Collider))
+        {
+            continue;
+        }
+
+        if (DeltaY > 0.0f)
+        {
+            Player.Transform.Y += Collider.Min.Y - PlayerBounds.Max.Y;
+        }
+        else if (DeltaY < 0.0f)
+        {
+            Player.Transform.Y += Collider.Max.Y - PlayerBounds.Min.Y;
+        }
+    }
+}
+
+}
+
+void PlayerController::Update(Entity& Player, const Input& GameInput, f32 DeltaSeconds, const std::vector<AABB>& Colliders) const
 {
     Vec2 MoveDirection;
 
@@ -41,8 +110,12 @@ void PlayerController::Update(Entity& Player, const Input& GameInput, f32 DeltaS
         MoveDirection.Y *= InverseLength;
     }
 
-    Player.Transform.X += MoveDirection.X * MoveSpeed * DeltaSeconds;
-    Player.Transform.Y += MoveDirection.Y * MoveSpeed * DeltaSeconds;
+    const f32 DeltaX = MoveDirection.X * MoveSpeed * DeltaSeconds;
+    const f32 DeltaY = MoveDirection.Y * MoveSpeed * DeltaSeconds;
+
+    // NOTE(ljh): 축별로 충돌을 해결하면 막히지 않은 축의 이동이 남아 wall을 따라 움직일 수 있다.
+    MoveAlongX(Player, DeltaX, Colliders);
+    MoveAlongY(Player, DeltaY, Colliders);
 }
 
 }

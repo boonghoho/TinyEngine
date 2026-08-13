@@ -1,5 +1,6 @@
 ﻿#pragma once
 
+#include "../Core/math_types.h"
 #include "entity.h"
 #include "../Renderer/texture2d.h"
 
@@ -23,6 +24,7 @@ public:
     Entity* GetEntityByID(u32 ID);
 
     std::vector<Entity>& GetEntities() { return Entities; }
+    const std::vector<AABB>& GetColliders() const { return Colliders; }
 
 private:
     Texture2D TilesetTexture;
@@ -40,6 +42,7 @@ private:
     i32 TilesetImageWidth = 0;
     i32 TilesetImageHeight = 0;
 
+    std::vector<AABB> Colliders;
     std::vector<Entity> Entities;
     u32 NextEntityID = 1;
 };

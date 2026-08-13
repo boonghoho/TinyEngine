@@ -198,17 +198,26 @@ int main(int Argc, char** Argv)
     int ViewMode = ViewModeFinal;
 
     bool bIsRunning = true;
-    Uint64 PreviousFrameTime = SDL_GetTicks();
+    const Uint64 PerformanceFrequency = SDL_GetPerformanceFrequency();
+    Uint64 PreviousFrameCounter = SDL_GetPerformanceCounter();
+    tiny::f32 FrameTimeMilliseconds = FrameDelayMilliseconds;
+    tiny::f32 CurrentFps = TargetFps;
 
     tiny::Input GameInput;
     tiny::PlayerController CatController;
 
     while (bIsRunning)
     {
-        const Uint64 FrameStartTime = SDL_GetTicks();
+        const Uint64 FrameStartCounter = SDL_GetPerformanceCounter();
         const tiny::f32 DeltaSeconds =
-            static_cast<tiny::f32>(FrameStartTime - PreviousFrameTime) / 1000.0f;
-        PreviousFrameTime = FrameStartTime;
+            static_cast<tiny::f32>(FrameStartCounter - PreviousFrameCounter) /
+            static_cast<tiny::f32>(PerformanceFrequency);
+        PreviousFrameCounter = FrameStartCounter;
+
+        FrameTimeMilliseconds = DeltaSeconds * 1000.0f;
+        CurrentFps = DeltaSeconds > 0.0f ? 1.0f / DeltaSeconds : 0.0f;
+
+        const Uint64 FrameStartTime = SDL_GetTicks();
 
         GameInput.BeginFrame();
 
@@ -330,11 +339,18 @@ int main(int Argc, char** Argv)
 
             if (tiny::Entity* Player = GameLevel.GetEntityByID(CatID))
             {
-                CatController.Update(*Player, GameInput, DeltaSeconds);
+                CatController.Update(
+                    *Player,
+                    GameInput,
+                    DeltaSeconds,
+                    GameLevel.GetColliders());
             }
         }
 
-        ImGui::Begin("RC Paint");
+        ImGui::Begin("RC");
+        ImGui::Text("FPS: %.1f / %.0f", CurrentFps, TargetFps);
+        ImGui::Text("Frame: %.2f ms / %.2f ms", FrameTimeMilliseconds, FrameDelayMilliseconds);
+        ImGui::Separator();
         ImGui::ColorEdit3("Brush Color", BrushColor);
         ImGui::SliderInt("Brush Radius", &BrushRadius, 1, 64);
         ImGui::SliderFloat("Indirect", &FinalIndirectStrength, 0.0f, 8.0f);

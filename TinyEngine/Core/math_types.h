@@ -16,4 +16,24 @@ struct Vec2
     }
 };
 
+struct AABB
+{
+    Vec2 Min;
+    Vec2 Max;
+
+    bool Contains(const Vec2& Point) const
+    {
+        return Point.X >= Min.X && Point.X <= Max.X &&
+               Point.Y >= Min.Y && Point.Y <= Max.Y;
+    }
+
+    bool Intersects(const AABB& Other) const
+    {
+        return Min.X < Other.Max.X &&
+               Max.X > Other.Min.X &&
+               Min.Y < Other.Max.Y &&
+               Max.Y > Other.Min.Y;
+    }
+};
+
 }
