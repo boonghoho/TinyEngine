@@ -1,7 +1,10 @@
-#pragma once
+﻿#pragma once
+
+#include "../Core/types.h"
 
 #include <d3d11.h>
 #include <wrl/client.h>
+#include <vector>
 
 // NOTE(ljh): 텍스처에서 사용할 정규화된 영역이다. 전체 텍스처는 { 0, 0, 1, 1 }이다.
 namespace tiny
@@ -23,6 +26,19 @@ struct ColorTint
     float A = 1.0f;
 };
 
+struct SpriteDrawCommand
+{
+    ID3D11ShaderResourceView* TextureSRV = nullptr;
+
+    float X = 0.0f;
+    float Y = 0.0f;
+    float Width = 0.0f;
+    float Height = 0.0f;
+
+    UVRect SourceUV;
+    ColorTint Tint;
+};
+
 // NOTE(ljh): 화면 픽셀 좌표를 받아 텍스처가 입혀진 사각형 하나를 렌더링한다.
 class SpriteRenderer
 {
@@ -35,8 +51,11 @@ public:
 
     bool Initialize(ID3D11Device* Device, int SceneWidth, int SceneHeight);
 
-    void Render(
-        ID3D11DeviceContext* DeviceContext,
+    void Begin(ID3D11DeviceContext* DeviceContext);
+
+    void End();
+
+    void Draw(
         ID3D11ShaderResourceView* TextureSRV,
         float X,
         float Y,
@@ -47,6 +66,8 @@ public:
     );
 
 private:
+    static constexpr u32 MaxSpritesPerBatch = 2048;
+
     struct SpriteVertex
     {
         float Position[2];
@@ -56,6 +77,10 @@ private:
 
     int SceneWidth = 0;
     int SceneHeight = 0;
+
+    std::vector<SpriteDrawCommand> DrawCommands;
+    ID3D11DeviceContext* CurrentDeviceContext = nullptr;
+    bool bIsDrawing = false;
 
     Microsoft::WRL::ComPtr<ID3D11VertexShader> VertexShader;
     Microsoft::WRL::ComPtr<ID3D11PixelShader> PixelShader;

@@ -427,7 +427,8 @@ int main(int Argc, char** Argv)
                 DisplayTexture);
         }
 
-        GameLevel.RenderTileMap(GraphicsDevice.GetContext(), SpriteRenderer);
+        SpriteRenderer.Begin(GraphicsDevice.GetContext());
+        GameLevel.RenderTileMap(SpriteRenderer);
 
         // NOTE(ljh): 현재 GameLevel의 Entity를 순회하며 SpriteComponent가 있는 경우 SpriteRenderer를 통해 화면에 렌더링한다.
         for (const tiny::Entity& CurrentEntity : GameLevel.GetEntities())
@@ -444,14 +445,15 @@ int main(int Argc, char** Argv)
                 continue;
             }
 
-            SpriteRenderer.Render(
-                GraphicsDevice.GetContext(),
+            SpriteRenderer.Draw(
                 CurrentSprite.Texture->GetShaderResourceView(),
                 CurrentEntity.Transform.X,
                 CurrentEntity.Transform.Y,
                 CurrentSprite.Width * CurrentEntity.Transform.ScaleX,
                 CurrentSprite.Height * CurrentEntity.Transform.ScaleY);
         }
+
+        SpriteRenderer.End();
 
         EditorGui.EndFrame();
         GraphicsDevice.Present();

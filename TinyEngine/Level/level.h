@@ -7,7 +7,6 @@
 #include <vector>
 
 struct ID3D11Device;
-struct ID3D11DeviceContext;
 
 namespace tiny
 {
@@ -18,7 +17,7 @@ class Level
 {
 public:
     bool Initialize(ID3D11Device* Device, const char* MapFilePath);
-    void RenderTileMap(ID3D11DeviceContext* DeviceContext, SpriteRenderer& Renderer) const;
+    void RenderTileMap(SpriteRenderer& Renderer) const;
 
     Entity& CreateEntity();
     Entity* GetEntityByID(u32 ID);

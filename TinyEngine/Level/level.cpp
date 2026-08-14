@@ -192,9 +192,9 @@ bool Level::Initialize(ID3D11Device* Device, const char* MapFilePath)
     }
 }
 
-void Level::RenderTileMap(ID3D11DeviceContext* DeviceContext, SpriteRenderer& Renderer) const
+void Level::RenderTileMap(SpriteRenderer& Renderer) const
 {
-    if (!DeviceContext || TileGIDs.empty())
+    if (TileGIDs.empty())
     {
         return;
     }
@@ -228,8 +228,7 @@ void Level::RenderTileMap(ID3D11DeviceContext* DeviceContext, SpriteRenderer& Re
                 static_cast<f32>((SourceRow + 1) * TilesetTileHeight) / TilesetImageHeight,
             };
 
-            Renderer.Render(
-                DeviceContext,
+            Renderer.Draw(
                 TilesetTexture.GetShaderResourceView(),
                 static_cast<f32>(TileX * MapTileWidth),
                 static_cast<f32>(TileY * MapTileHeight),
