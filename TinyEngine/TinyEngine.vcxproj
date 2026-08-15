@@ -146,6 +146,7 @@
     <ClCompile Include="Renderer\d3d11_device.cpp" />
     <ClCompile Include="Renderer\fullscreen_pass.cpp" />
     <ClCompile Include="Renderer\radiance_cascade_renderer.cpp" />
+    <ClCompile Include="Renderer\render_pipeline.cpp" />
     <ClCompile Include="Renderer\shader.cpp" />
     <ClCompile Include="Renderer\scene_texture.cpp" />
     <ClCompile Include="Renderer\render_texture.cpp" />
@@ -171,6 +172,7 @@
     <ClInclude Include="Renderer\d3d11_device.h" />
     <ClInclude Include="Renderer\fullscreen_pass.h" />
     <ClInclude Include="Renderer\radiance_cascade_renderer.h" />
+    <ClInclude Include="Renderer\render_pipeline.h" />
     <ClInclude Include="Renderer\shader.h" />
     <ClInclude Include="Renderer\scene_texture.h" />
     <ClInclude Include="Renderer\render_texture.h" />
@@ -179,6 +181,7 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="..\ThirdParty\nlohmann\LICENSE.MIT" />
+    <None Include="Shaders\composite_scene.hlsl" />
     <None Include="Shaders\display_texture.hlsl" />
     <None Include="Shaders\rc_composite.hlsl" />
     <None Include="Shaders\rc_gather.hlsl" />

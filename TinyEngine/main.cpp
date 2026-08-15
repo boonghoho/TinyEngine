@@ -15,10 +15,7 @@
 #include "Level/level.h"
 #include "Memory/memory_arena.h"
 #include "Renderer/d3d11_device.h"
-#include "Renderer/fullscreen_pass.h"
-#include "Renderer/radiance_cascade_renderer.h"
-#include "Renderer/scene_texture.h"
-#include "Renderer/sprite_renderer.h"
+#include "Renderer/render_pipeline.h"
 #include "Renderer/texture2d.h"
 
 #include <cstdio>
@@ -27,30 +24,6 @@ constexpr tiny::i32 WindowWidth = 1280;
 constexpr tiny::i32 WindowHeight = 720;
 constexpr tiny::f32 TargetFps = 144.0f;
 constexpr tiny::f32 FrameDelayMilliseconds = 1000.0f / TargetFps;
-constexpr int ViewModeScene = 0;
-constexpr int ViewModeFirstCascade = 1;
-constexpr int ViewModeMerge = ViewModeFirstCascade + tiny::RadianceCascadeRenderer::CascadeCount;
-constexpr int ViewModeFinal = ViewModeMerge + 1;
-
-void DrawDemoScene(tiny::SceneTexture& TargetSceneTexture)
-{
-    TargetSceneTexture.Clear();
-
-    TargetSceneTexture.DrawLine(210, 345, 635, 375, 10, 70, 255, 90);
-    TargetSceneTexture.DrawLine(400, 440, 690, 430, 9, 235, 255, 60);
-    TargetSceneTexture.DrawLine(585, 565, 735, 525, 10, 255, 75, 55);
-
-    TargetSceneTexture.DrawLine(260, 190, 260, 330, 13, 255, 70, 150);
-    TargetSceneTexture.DrawLine(405, 180, 405, 315, 12, 75, 245, 255);
-    TargetSceneTexture.DrawLine(530, 190, 530, 270, 11, 70, 255, 95);
-
-    TargetSceneTexture.DrawLine(760, 135, 865, 415, 12, 210, 255, 60);
-    TargetSceneTexture.DrawLine(1040, 115, 1065, 365, 15, 255, 82, 65);
-    TargetSceneTexture.DrawLine(900, 100, 915, 165, 3, 255, 90, 65);
-
-    TargetSceneTexture.DrawCircle(255, 515, 32, 255, 82, 65);
-    TargetSceneTexture.DrawCircle(625, 640, 36, 255, 82, 65);
-}
 
 int main(int Argc, char** Argv)
 {
@@ -98,42 +71,9 @@ int main(int Argc, char** Argv)
         return 1;
     }
 
-    tiny::RadianceCascadeRenderer RadianceCascade;
-    if (!RadianceCascade.Initialize(GraphicsDevice.GetDevice(), WindowWidth, WindowHeight))
+    tiny::RenderPipeline RenderPipeline;
+    if (!RenderPipeline.Initialize(GraphicsDevice.GetDevice(), WindowWidth, WindowHeight))
     {
-        GraphicsDevice.Release();
-        SDL_DestroyWindow(Window);
-        SDL_Quit();
-        return 1;
-    }
-
-    tiny::FullscreenPass DisplayPass;
-    if (!DisplayPass.Initialize(GraphicsDevice.GetDevice(), L"Shaders/display_texture.hlsl"))
-    {
-        RadianceCascade.Release();
-        GraphicsDevice.Release();
-        SDL_DestroyWindow(Window);
-        SDL_Quit();
-        return 1;
-    }
-
-    tiny::SceneTexture RcSceneTexture;
-    if (!RcSceneTexture.Initialize(GraphicsDevice.GetDevice(), WindowWidth, WindowHeight))
-    {
-        DisplayPass.Release();
-        RadianceCascade.Release();
-        GraphicsDevice.Release();
-        SDL_DestroyWindow(Window);
-        SDL_Quit();
-        return 1;
-    }
-
-    tiny::SpriteRenderer SpriteRenderer;
-    if (!SpriteRenderer.Initialize(GraphicsDevice.GetDevice(), WindowWidth, WindowHeight))
-    {
-        RcSceneTexture.Release();
-        DisplayPass.Release();
-        RadianceCascade.Release();
         GraphicsDevice.Release();
         SDL_DestroyWindow(Window);
         SDL_Quit();
@@ -171,31 +111,14 @@ int main(int Argc, char** Argv)
     Cat.SpriteComponent->Height = 75.0f;
 
     tiny::ImGuiLayer EditorGui;
-    if (!EditorGui.Initialize(
-            Window,
-            GraphicsDevice.GetDevice(),
-            GraphicsDevice.GetContext()))
+    if (!EditorGui.Initialize(Window, GraphicsDevice.GetDevice(), GraphicsDevice.GetContext()))
     {
-        RcSceneTexture.Release();
-        DisplayPass.Release();
-        RadianceCascade.Release();
+        RenderPipeline.Release();
         GraphicsDevice.Release();
         SDL_DestroyWindow(Window);
         SDL_Quit();
         return 1;
     }
-
-    bool bLeftMouseDown = false;
-    bool bEraseMouseDown = false;
-
-    int LastMouseX = 0;
-    int LastMouseY = 0;
-
-    int BrushRadius = 8;
-    float BrushColor[3] = {1.0f, 0.70f, 0.16f};
-    float FinalIndirectStrength = 1.0f;
-    float FinalExposure = 1.2f;
-    int ViewMode = ViewModeFinal;
 
     bool bIsRunning = true;
     const Uint64 PerformanceFrequency = SDL_GetPerformanceFrequency();
@@ -232,95 +155,7 @@ int main(int Argc, char** Argv)
                 bIsRunning = false;
             }
 
-            const bool bImGuiWantsMouse = EditorGui.WantsMouse();
-
-            if (Event.type == SDL_EVENT_MOUSE_BUTTON_DOWN && !bImGuiWantsMouse)
-            {
-                const int MouseX = static_cast<int>(Event.button.x);
-                const int MouseY = static_cast<int>(Event.button.y);
-                const tiny::u8 BrushColorR = static_cast<tiny::u8>(BrushColor[0] * 255.0f);
-                const tiny::u8 BrushColorG = static_cast<tiny::u8>(BrushColor[1] * 255.0f);
-                const tiny::u8 BrushColorB = static_cast<tiny::u8>(BrushColor[2] * 255.0f);
-
-                LastMouseX = MouseX;
-                LastMouseY = MouseY;
-
-                if (Event.button.button == SDL_BUTTON_LEFT)
-                {
-                    bLeftMouseDown = true;
-                    RcSceneTexture.DrawCircle(
-                        MouseX,
-                        MouseY,
-                        BrushRadius,
-                        BrushColorR,
-                        BrushColorG,
-                        BrushColorB);
-                }
-
-                if (Event.button.button == SDL_BUTTON_RIGHT)
-                {
-                    bEraseMouseDown = true;
-                    RcSceneTexture.DrawCircle(MouseX, MouseY, BrushRadius, 0, 0, 0);
-                }
-            }
-
-            if (Event.type == SDL_EVENT_MOUSE_BUTTON_UP)
-            {
-                if (Event.button.button == SDL_BUTTON_LEFT)
-                {
-                    bLeftMouseDown = false;
-                }
-
-                if (Event.button.button == SDL_BUTTON_RIGHT)
-                {
-                    bEraseMouseDown = false;
-                }
-            }
-
-            if (Event.type == SDL_EVENT_MOUSE_MOTION && !bImGuiWantsMouse)
-            {
-                const int MouseX = static_cast<int>(Event.motion.x);
-                const int MouseY = static_cast<int>(Event.motion.y);
-                const tiny::u8 BrushColorR = static_cast<tiny::u8>(BrushColor[0] * 255.0f);
-                const tiny::u8 BrushColorG = static_cast<tiny::u8>(BrushColor[1] * 255.0f);
-                const tiny::u8 BrushColorB = static_cast<tiny::u8>(BrushColor[2] * 255.0f);
-
-                if (bLeftMouseDown)
-                {
-                    RcSceneTexture.DrawLine(
-                        LastMouseX,
-                        LastMouseY,
-                        MouseX,
-                        MouseY,
-                        BrushRadius,
-                        BrushColorR,
-                        BrushColorG,
-                        BrushColorB);
-                }
-
-                if (bEraseMouseDown)
-                {
-                    RcSceneTexture.DrawLine(
-                        LastMouseX,
-                        LastMouseY,
-                        MouseX,
-                        MouseY,
-                        BrushRadius,
-                        0,
-                        0,
-                        0);
-                }
-
-                LastMouseX = MouseX;
-                LastMouseY = MouseY;
-            }
         }
-
-        float MouseX = 0.0f;
-        float MouseY = 0.0f;
-        SDL_GetMouseState(&MouseX, &MouseY);
-
-        const float TimeSeconds = SDL_GetTicks() / 1000.0f;
         const float ClearColor[4] = {0.0f, 0.0f, 0.0f, 1.0f};
 
         EditorGui.BeginFrame();
@@ -332,11 +167,6 @@ int main(int Argc, char** Argv)
 
         if (!EditorGui.WantsKeyboard())
         {
-            if (GameInput.WasPressed(SDL_SCANCODE_C))
-            {
-                RcSceneTexture.Clear();
-            }
-
             if (tiny::Entity* Player = GameLevel.GetEntityByID(CatID))
             {
                 CatController.Update(
@@ -347,113 +177,13 @@ int main(int Argc, char** Argv)
             }
         }
 
-        ImGui::Begin("RC");
+        ImGui::Begin("TinyEngine");
         ImGui::Text("FPS: %.1f / %.0f", CurrentFps, TargetFps);
         ImGui::Text("Frame: %.2f ms / %.2f ms", FrameTimeMilliseconds, FrameDelayMilliseconds);
-        ImGui::Separator();
-        ImGui::ColorEdit3("Brush Color", BrushColor);
-        ImGui::SliderInt("Brush Radius", &BrushRadius, 1, 64);
-        ImGui::SliderFloat("Indirect", &FinalIndirectStrength, 0.0f, 8.0f);
-        ImGui::SliderFloat("Exposure", &FinalExposure, 0.2f, 3.0f);
-        ImGui::RadioButton("Scene", &ViewMode, ViewModeScene);
-        for (int CascadeIndex = 0; CascadeIndex < tiny::RadianceCascadeRenderer::CascadeCount; ++CascadeIndex)
-        {
-            char CascadeLabel[8] = {};
-            std::snprintf(CascadeLabel, sizeof(CascadeLabel), "C%d", CascadeIndex);
-
-            ImGui::SameLine();
-            ImGui::RadioButton(
-                CascadeLabel,
-                &ViewMode,
-                ViewModeFirstCascade + CascadeIndex);
-        }
-
-        ImGui::SameLine();
-        ImGui::RadioButton("Merge", &ViewMode, ViewModeMerge);
-        ImGui::SameLine();
-        ImGui::RadioButton("Final", &ViewMode, ViewModeFinal);
-        if (ImGui::Button("Clear"))
-        {
-            RcSceneTexture.Clear();
-        }
-        ImGui::SameLine();
-        if (ImGui::Button("Demo Scene"))
-        {
-            DrawDemoScene(RcSceneTexture);
-            ViewMode = ViewModeFinal;
-        }
         ImGui::End();
 
-        // TODO(ljh): SceneTexture가 변경된 frame에만 GPU로 upload한다.
-        RcSceneTexture.Upload(GraphicsDevice.GetContext());
-        RadianceCascade.GenerateLighting(
-            GraphicsDevice,
-            RcSceneTexture.GetShaderResourceView());
-
         GraphicsDevice.BeginFrame(ClearColor);
-
-        if (ViewMode == ViewModeFinal)
-        {
-            RadianceCascade.DrawFinal(
-                GraphicsDevice.GetContext(),
-                RcSceneTexture.GetShaderResourceView(),
-                GraphicsDevice.GetWidth(),
-                GraphicsDevice.GetHeight(),
-                FinalIndirectStrength,
-                FinalExposure);
-        }
-        else
-        {
-            ID3D11ShaderResourceView* DisplayTexture = RcSceneTexture.GetShaderResourceView();
-
-            if (ViewMode >= ViewModeFirstCascade &&
-                ViewMode < ViewModeFirstCascade + tiny::RadianceCascadeRenderer::CascadeCount)
-            {
-                const int CascadeIndex = ViewMode - ViewModeFirstCascade;
-                DisplayTexture = RadianceCascade.GetCascadeShaderResourceView(CascadeIndex);
-            }
-            else if (ViewMode == ViewModeMerge)
-            {
-                DisplayTexture = RadianceCascade.GetMergedShaderResourceView();
-            }
-
-            DisplayPass.Render(
-                GraphicsDevice.GetContext(),
-                static_cast<float>(GraphicsDevice.GetWidth()),
-                static_cast<float>(GraphicsDevice.GetHeight()),
-                MouseX,
-                MouseY,
-                TimeSeconds,
-                DisplayTexture);
-        }
-
-        SpriteRenderer.Begin(GraphicsDevice.GetContext());
-        GameLevel.RenderTileMap(SpriteRenderer);
-
-        // NOTE(ljh): 현재 GameLevel의 Entity를 순회하며 SpriteComponent가 있는 경우 SpriteRenderer를 통해 화면에 렌더링한다.
-        for (const tiny::Entity& CurrentEntity : GameLevel.GetEntities())
-        {
-            if (!CurrentEntity.SpriteComponent)
-            {
-                continue;
-            }
-
-            const tiny::Sprite& CurrentSprite = *CurrentEntity.SpriteComponent;
-
-            if (CurrentSprite.Texture == nullptr)
-            {
-                continue;
-            }
-
-            SpriteRenderer.Draw(
-                CurrentSprite.Texture->GetShaderResourceView(),
-                CurrentEntity.Transform.X,
-                CurrentEntity.Transform.Y,
-                CurrentSprite.Width * CurrentEntity.Transform.ScaleX,
-                CurrentSprite.Height * CurrentEntity.Transform.ScaleY);
-        }
-
-        SpriteRenderer.End();
+        RenderPipeline.RenderFrame(GraphicsDevice, GameLevel);
 
         EditorGui.EndFrame();
         GraphicsDevice.Present();
@@ -468,9 +198,7 @@ int main(int Argc, char** Argv)
     }
 
     EditorGui.Release();
-    RcSceneTexture.Release();
-    DisplayPass.Release();
-    RadianceCascade.Release();
+    RenderPipeline.Release();
     GraphicsDevice.Release();
     SDL_DestroyWindow(Window);
     SDL_Quit();

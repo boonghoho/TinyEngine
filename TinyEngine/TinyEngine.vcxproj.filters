@@ -111,6 +111,9 @@
     <ClCompile Include="Renderer\radiance_cascade_renderer.cpp">
       <Filter>Source Files\Renderer</Filter>
     </ClCompile>
+    <ClCompile Include="Renderer\render_pipeline.cpp">
+      <Filter>Source Files\Renderer</Filter>
+    </ClCompile>
     <ClCompile Include="Renderer\shader.cpp">
       <Filter>Source Files\Renderer</Filter>
     </ClCompile>
@@ -182,6 +185,9 @@
     <ClInclude Include="Renderer\radiance_cascade_renderer.h">
       <Filter>Header Files\Renderer</Filter>
     </ClInclude>
+    <ClInclude Include="Renderer\render_pipeline.h">
+      <Filter>Header Files\Renderer</Filter>
+    </ClInclude>
     <ClInclude Include="Renderer\shader.h">
       <Filter>Header Files\Renderer</Filter>
     </ClInclude>
@@ -203,6 +209,9 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="..\ThirdParty\nlohmann\LICENSE.MIT" />
+    <None Include="Shaders\composite_scene.hlsl">
+      <Filter>Shaders</Filter>
+    </None>
     <None Include="Shaders\display_texture.hlsl">
       <Filter>Shaders</Filter>
     </None>
