@@ -5,11 +5,6 @@
 namespace tiny
 {
 
-RenderTexture::~RenderTexture()
-{
-    Release();
-}
-
 bool RenderTexture::Initialize(ID3D11Device* Device, int InWidth, int InHeight)
 {
     Release();
@@ -35,7 +30,7 @@ bool RenderTexture::Initialize(ID3D11Device* Device, int InWidth, int InHeight)
     HRESULT Result = Device->CreateTexture2D(
         &TextureDesc,
         nullptr,
-        &Texture
+        Texture.ReleaseAndGetAddressOf()
     );
 
     if (FAILED(Result))
@@ -51,9 +46,9 @@ bool RenderTexture::Initialize(ID3D11Device* Device, int InWidth, int InHeight)
     RenderTargetViewDesc.Texture2D.MipSlice = 0;
 
     Result = Device->CreateRenderTargetView(
-        Texture,
+        Texture.Get(),
         &RenderTargetViewDesc,
-        &RenderTargetView
+        RenderTargetView.ReleaseAndGetAddressOf()
     );
 
     if (FAILED(Result))
@@ -70,9 +65,9 @@ bool RenderTexture::Initialize(ID3D11Device* Device, int InWidth, int InHeight)
     ShaderResourceViewDesc.Texture2D.MipLevels = 1;
 
     Result = Device->CreateShaderResourceView(
-        Texture,
+        Texture.Get(),
         &ShaderResourceViewDesc,
-        &ShaderResourceView
+        ShaderResourceView.ReleaseAndGetAddressOf()
     );
 
     if (FAILED(Result))
@@ -87,23 +82,9 @@ bool RenderTexture::Initialize(ID3D11Device* Device, int InWidth, int InHeight)
 
 void RenderTexture::Release()
 {
-    if (ShaderResourceView)
-    {
-        ShaderResourceView->Release();
-        ShaderResourceView = nullptr;
-    }
-
-    if (RenderTargetView)
-    {
-        RenderTargetView->Release();
-        RenderTargetView = nullptr;
-    }
-
-    if (Texture)
-    {
-        Texture->Release();
-        Texture = nullptr;
-    }
+    ShaderResourceView.Reset();
+    RenderTargetView.Reset();
+    Texture.Reset();
 
     Width = 0;
     Height = 0;
@@ -111,12 +92,12 @@ void RenderTexture::Release()
 
 ID3D11RenderTargetView* RenderTexture::GetRenderTargetView() const
 {
-    return RenderTargetView;
+    return RenderTargetView.Get();
 }
 
 ID3D11ShaderResourceView* RenderTexture::GetShaderResourceView() const
 {
-    return ShaderResourceView;
+    return ShaderResourceView.Get();
 }
 
 }

@@ -7,11 +7,6 @@
 namespace tiny
 {
 
-FullscreenPass::~FullscreenPass()
-{
-    Release();
-}
-
 bool FullscreenPass::Initialize(ID3D11Device* Device, const wchar_t* ShaderPath)
 {
     Release();
@@ -21,17 +16,16 @@ bool FullscreenPass::Initialize(ID3D11Device* Device, const wchar_t* ShaderPath)
         return false;
     }
 
-    ID3DBlob* VertexShaderBlob = nullptr;
-    ID3DBlob* PixelShaderBlob = nullptr;
+    Microsoft::WRL::ComPtr<ID3DBlob> VertexShaderBlob;
+    Microsoft::WRL::ComPtr<ID3DBlob> PixelShaderBlob;
 
-    if (!CompileShaderFromFile(ShaderPath, "VSMain", "vs_5_0", &VertexShaderBlob))
+    if (!CompileShaderFromFile(ShaderPath, "VSMain", "vs_5_0", VertexShaderBlob.ReleaseAndGetAddressOf()))
     {
         return false;
     }
 
-    if (!CompileShaderFromFile(ShaderPath, "PSMain", "ps_5_0", &PixelShaderBlob))
+    if (!CompileShaderFromFile(ShaderPath, "PSMain", "ps_5_0", PixelShaderBlob.ReleaseAndGetAddressOf()))
     {
-        VertexShaderBlob->Release();
         return false;
     }
 
@@ -39,14 +33,11 @@ bool FullscreenPass::Initialize(ID3D11Device* Device, const wchar_t* ShaderPath)
         VertexShaderBlob->GetBufferPointer(),
         VertexShaderBlob->GetBufferSize(),
         nullptr,
-        &VertexShader
+        VertexShader.ReleaseAndGetAddressOf()
     );
-
-    VertexShaderBlob->Release();
 
     if (FAILED(Result))
     {
-        PixelShaderBlob->Release();
         std::printf("CreateVertexShader failed: 0x%08X\n", Result);
         return false;
     }
@@ -55,10 +46,8 @@ bool FullscreenPass::Initialize(ID3D11Device* Device, const wchar_t* ShaderPath)
         PixelShaderBlob->GetBufferPointer(),
         PixelShaderBlob->GetBufferSize(),
         nullptr,
-        &PixelShader
+        PixelShader.ReleaseAndGetAddressOf()
     );
-
-    PixelShaderBlob->Release();
 
     if (FAILED(Result))
     {
@@ -75,7 +64,7 @@ bool FullscreenPass::Initialize(ID3D11Device* Device, const wchar_t* ShaderPath)
     Result = Device->CreateBuffer(
         &ConstantBufferDesc,
         nullptr,
-        &FrameConstantBuffer
+        FrameConstantBuffer.ReleaseAndGetAddressOf()
     );
 
     if (FAILED(Result))
@@ -96,7 +85,7 @@ bool FullscreenPass::Initialize(ID3D11Device* Device, const wchar_t* ShaderPath)
 
     Result = Device->CreateSamplerState(
         &SamplerDesc,
-        &PointClampSamplerState
+        PointClampSamplerState.ReleaseAndGetAddressOf()
     );
 
     if (FAILED(Result))
@@ -111,29 +100,10 @@ bool FullscreenPass::Initialize(ID3D11Device* Device, const wchar_t* ShaderPath)
 
 void FullscreenPass::Release()
 {
-    if (PointClampSamplerState)
-    {
-        PointClampSamplerState->Release();
-        PointClampSamplerState = nullptr;
-    }
-
-    if (FrameConstantBuffer)
-    {
-        FrameConstantBuffer->Release();
-        FrameConstantBuffer = nullptr;
-    }
-
-    if (PixelShader)
-    {
-        PixelShader->Release();
-        PixelShader = nullptr;
-    }
-
-    if (VertexShader)
-    {
-        VertexShader->Release();
-        VertexShader = nullptr;
-    }
+    PointClampSamplerState.Reset();
+    FrameConstantBuffer.Reset();
+    PixelShader.Reset();
+    VertexShader.Reset();
 }
 
 void FullscreenPass::Render(
@@ -185,7 +155,7 @@ void FullscreenPass::Render(
     Constants.Param3 = Param3;
 
     DeviceContext->UpdateSubresource(
-        FrameConstantBuffer,
+        FrameConstantBuffer.Get(),
         0,
         nullptr,
         &Constants,
@@ -196,16 +166,18 @@ void FullscreenPass::Render(
     DeviceContext->IASetInputLayout(nullptr);
     DeviceContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 
-    DeviceContext->VSSetShader(VertexShader, nullptr, 0);
-    DeviceContext->PSSetShader(PixelShader, nullptr, 0);
+    DeviceContext->VSSetShader(VertexShader.Get(), nullptr, 0);
+    DeviceContext->PSSetShader(PixelShader.Get(), nullptr, 0);
     
     // 이전 pass가 남긴 alpha blend state를 이어받지 않는다.
     // nullptr은 blending이 꺼진 D3D11 기본 blend state다.
     DeviceContext->OMSetBlendState(nullptr, nullptr, 0xFFFFFFFF);
 
-    DeviceContext->PSSetConstantBuffers(0, 1, &FrameConstantBuffer);
+    ID3D11Buffer* ConstantBuffers[] = {FrameConstantBuffer.Get()};
+    DeviceContext->PSSetConstantBuffers(0, 1, ConstantBuffers);
     DeviceContext->PSSetShaderResources(0, ShaderResourceViewCount, ShaderResourceViews);
-    DeviceContext->PSSetSamplers(0, 1, &PointClampSamplerState);
+    ID3D11SamplerState* SamplerStates[] = {PointClampSamplerState.Get()};
+    DeviceContext->PSSetSamplers(0, 1, SamplerStates);
 
     DeviceContext->Draw(3, 0);
 

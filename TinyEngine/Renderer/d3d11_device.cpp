@@ -52,10 +52,10 @@ bool D3D11Device::Initialize(HWND WindowHandle, int InWidth, int InHeight)
         1,
         D3D11_SDK_VERSION,
         &SwapChainDesc,
-        &SwapChain,
-        &Device,
+        SwapChain.ReleaseAndGetAddressOf(),
+        Device.ReleaseAndGetAddressOf(),
         nullptr,
-        &DeviceContext
+        DeviceContext.ReleaseAndGetAddressOf()
     );
 
     if (FAILED(Result))
@@ -78,29 +78,10 @@ bool D3D11Device::Initialize(HWND WindowHandle, int InWidth, int InHeight)
 
 void D3D11Device::Release()
 {
-    if (BackBufferRenderTargetView)
-    {
-        BackBufferRenderTargetView->Release();
-        BackBufferRenderTargetView = nullptr;
-    }
-
-    if (SwapChain)
-    {
-        SwapChain->Release();
-        SwapChain = nullptr;
-    }
-
-    if (DeviceContext)
-    {
-        DeviceContext->Release();
-        DeviceContext = nullptr;
-    }
-
-    if (Device)
-    {
-        Device->Release();
-        Device = nullptr;
-    }
+    BackBufferRenderTargetView.Reset();
+    SwapChain.Reset();
+    DeviceContext.Reset();
+    Device.Reset();
 
     Width = 0;
     Height = 0;
@@ -109,12 +90,12 @@ void D3D11Device::Release()
 void D3D11Device::BeginFrame(const float ClearColor[4])
 {
     SetBackBufferRenderTarget();
-    ClearRenderTarget(BackBufferRenderTargetView, ClearColor);
+    ClearRenderTarget(BackBufferRenderTargetView.Get(), ClearColor);
 }
 
 void D3D11Device::SetBackBufferRenderTarget()
 {
-    SetRenderTarget(BackBufferRenderTargetView);
+    SetRenderTarget(BackBufferRenderTargetView.Get());
 }
 
 void D3D11Device::SetRenderTarget(ID3D11RenderTargetView* RenderTargetView)
@@ -141,8 +122,8 @@ void D3D11Device::Present()
 
 bool D3D11Device::CreateBackBufferRenderTarget()
 {
-    ID3D11Texture2D* BackBuffer = nullptr;
-    HRESULT Result = SwapChain->GetBuffer(0, IID_PPV_ARGS(&BackBuffer));
+    Microsoft::WRL::ComPtr<ID3D11Texture2D> BackBuffer;
+    HRESULT Result = SwapChain->GetBuffer(0, IID_PPV_ARGS(BackBuffer.GetAddressOf()));
 
     if (FAILED(Result))
     {
@@ -150,8 +131,10 @@ bool D3D11Device::CreateBackBufferRenderTarget()
         return false;
     }
 
-    Result = Device->CreateRenderTargetView(BackBuffer, nullptr, &BackBufferRenderTargetView);
-    BackBuffer->Release();
+    Result = Device->CreateRenderTargetView(
+        BackBuffer.Get(),
+        nullptr,
+        BackBufferRenderTargetView.ReleaseAndGetAddressOf());
 
     if (FAILED(Result))
     {

@@ -1,6 +1,7 @@
 ﻿#pragma once
 
 #include <d3d11.h>
+#include <wrl/client.h>
 
 // NOTE(ljh): 하나 이상의 Texture를 입력받아 Fullscreen Shader Pass를 실행한다.
 namespace tiny
@@ -10,7 +11,7 @@ class FullscreenPass
 {
 public:
     FullscreenPass() = default;
-    ~FullscreenPass();
+    ~FullscreenPass() = default;
 
     FullscreenPass(const FullscreenPass&) = delete;
     FullscreenPass& operator=(const FullscreenPass&) = delete;
@@ -56,10 +57,10 @@ private:
         float Padding[3];
     };
 
-    ID3D11VertexShader* VertexShader = nullptr;
-    ID3D11PixelShader* PixelShader = nullptr;
-    ID3D11Buffer* FrameConstantBuffer = nullptr;
-    ID3D11SamplerState* PointClampSamplerState = nullptr;
+    Microsoft::WRL::ComPtr<ID3D11VertexShader> VertexShader;
+    Microsoft::WRL::ComPtr<ID3D11PixelShader> PixelShader;
+    Microsoft::WRL::ComPtr<ID3D11Buffer> FrameConstantBuffer;
+    Microsoft::WRL::ComPtr<ID3D11SamplerState> PointClampSamplerState;
 };
 
 }

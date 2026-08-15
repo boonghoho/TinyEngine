@@ -5,6 +5,7 @@
 
 #include <Windows.h>
 #include <d3d11.h>
+#include <wrl/client.h>
 
 // NOTE(ljh): D3D11 핵심 객체를 소유하고, Render Target 설정과 화면 출력을 관리한다.
 namespace tiny
@@ -29,8 +30,8 @@ public:
     void ClearRenderTarget(ID3D11RenderTargetView* RenderTargetView, const float ClearColor[4]);
     void Present();
 
-    ID3D11Device* GetDevice() const { return Device; }
-    ID3D11DeviceContext* GetContext() const { return DeviceContext; }
+    ID3D11Device* GetDevice() const { return Device.Get(); }
+    ID3D11DeviceContext* GetContext() const { return DeviceContext.Get(); }
     int GetWidth() const { return Width; }
     int GetHeight() const { return Height; }
 
@@ -38,10 +39,10 @@ private:
     bool CreateBackBufferRenderTarget();
     void SetViewport(int ViewportWidth, int ViewportHeight);
 
-    ID3D11Device* Device = nullptr;
-    ID3D11DeviceContext* DeviceContext = nullptr;
-    IDXGISwapChain* SwapChain = nullptr;
-    ID3D11RenderTargetView* BackBufferRenderTargetView = nullptr;
+    Microsoft::WRL::ComPtr<ID3D11Device> Device;
+    Microsoft::WRL::ComPtr<ID3D11DeviceContext> DeviceContext;
+    Microsoft::WRL::ComPtr<IDXGISwapChain> SwapChain;
+    Microsoft::WRL::ComPtr<ID3D11RenderTargetView> BackBufferRenderTargetView;
 
     int Width = 0;
     int Height = 0;

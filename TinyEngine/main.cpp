@@ -25,58 +25,17 @@ constexpr tiny::i32 WindowHeight = 720;
 constexpr tiny::f32 TargetFps = 144.0f;
 constexpr tiny::f32 FrameDelayMilliseconds = 1000.0f / TargetFps;
 
-int main(int Argc, char** Argv)
+int RunEngine(SDL_Window* Window, HWND WindowHandle)
 {
-    (void)Argc;
-    (void)Argv;
-
-    SDL_SetMainReady();
-
-    if (!SDL_Init(SDL_INIT_VIDEO))
-    {
-        std::printf("SDL_Init failed: %s\n", SDL_GetError());
-        return 1;
-    }
-
-    SDL_Window* Window = SDL_CreateWindow(
-        "TinyEngine",
-        WindowWidth,
-        WindowHeight,
-        0);
-
-    if (Window == nullptr)
-    {
-        std::printf("SDL_CreateWindow failed: %s\n", SDL_GetError());
-        SDL_Quit();
-        return 1;
-    }
-
-    SDL_PropertiesID WindowProperties = SDL_GetWindowProperties(Window);
-    HWND WindowHandle = static_cast<HWND>(
-        SDL_GetPointerProperty(WindowProperties, SDL_PROP_WINDOW_WIN32_HWND_POINTER, nullptr));
-
-    if (WindowHandle == nullptr)
-    {
-        std::printf("Failed to get HWND from SDL window\n");
-        SDL_DestroyWindow(Window);
-        SDL_Quit();
-        return 1;
-    }
-
     tiny::D3D11Device GraphicsDevice;
     if (!GraphicsDevice.Initialize(WindowHandle, WindowWidth, WindowHeight))
     {
-        SDL_DestroyWindow(Window);
-        SDL_Quit();
         return 1;
     }
 
     tiny::RenderPipeline RenderPipeline;
     if (!RenderPipeline.Initialize(GraphicsDevice.GetDevice(), WindowWidth, WindowHeight))
     {
-        GraphicsDevice.Release();
-        SDL_DestroyWindow(Window);
-        SDL_Quit();
         return 1;
     }
 
@@ -113,10 +72,6 @@ int main(int Argc, char** Argv)
     tiny::ImGuiLayer EditorGui;
     if (!EditorGui.Initialize(Window, GraphicsDevice.GetDevice(), GraphicsDevice.GetContext()))
     {
-        RenderPipeline.Release();
-        GraphicsDevice.Release();
-        SDL_DestroyWindow(Window);
-        SDL_Quit();
         return 1;
     }
 
@@ -197,11 +152,51 @@ int main(int Argc, char** Argv)
         }
     }
 
-    EditorGui.Release();
-    RenderPipeline.Release();
-    GraphicsDevice.Release();
+    return 0;
+}
+
+int main(int Argc, char** Argv)
+{
+    (void)Argc;
+    (void)Argv;
+
+    SDL_SetMainReady();
+
+    if (!SDL_Init(SDL_INIT_VIDEO))
+    {
+        std::printf("SDL_Init failed: %s\n", SDL_GetError());
+        return 1;
+    }
+
+    SDL_Window* Window = SDL_CreateWindow(
+        "TinyEngine",
+        WindowWidth,
+        WindowHeight,
+        0);
+
+    if (Window == nullptr)
+    {
+        std::printf("SDL_CreateWindow failed: %s\n", SDL_GetError());
+        SDL_Quit();
+        return 1;
+    }
+
+    SDL_PropertiesID WindowProperties = SDL_GetWindowProperties(Window);
+    HWND WindowHandle = static_cast<HWND>(
+        SDL_GetPointerProperty(WindowProperties, SDL_PROP_WINDOW_WIN32_HWND_POINTER, nullptr));
+
+    if (WindowHandle == nullptr)
+    {
+        std::printf("Failed to get HWND from SDL window\n");
+        SDL_DestroyWindow(Window);
+        SDL_Quit();
+        return 1;
+    }
+
+    const int Result = RunEngine(Window, WindowHandle);
+
     SDL_DestroyWindow(Window);
     SDL_Quit();
 
-    return 0;
+    return Result;
 }
