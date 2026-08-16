@@ -2,14 +2,5 @@
 
 TinyEngine is a learning-oriented C++ engine project for small 2D, 2.5D, and top-view games.
 
-Current focus:
-
-- SDL3 window creation
-- DirectX 11 device, swap chain, and fullscreen rendering
-- Flatland Radiance Cascades study prototype
-
-<img width="1272" height="744" alt="image" src="https://github.com/user-attachments/assets/53be5a0c-1dea-4e1d-b9dc-e03caaf9fa7f" />
-
-<img width="1272" height="746" alt="image" src="https://github.com/user-attachments/assets/27497cdf-56ff-4dd6-9250-76953023acd0" />
-
+<img width="1274" height="741" alt="image" src="https://github.com/user-attachments/assets/666c6f53-de05-4c2b-84e9-a938a85731e9" />
 
