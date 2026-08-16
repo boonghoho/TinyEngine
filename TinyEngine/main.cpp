@@ -1,4 +1,4 @@
-﻿#define SDL_MAIN_HANDLED
+#define SDL_MAIN_HANDLED
 #define WIN32_LEAN_AND_MEAN
 #define NOMINMAX
 
@@ -18,12 +18,107 @@
 #include "Renderer/render_pipeline.h"
 #include "Renderer/texture2d.h"
 
+#include <array>
 #include <cstdio>
 
 constexpr tiny::i32 WindowWidth = 1280;
 constexpr tiny::i32 WindowHeight = 720;
 constexpr tiny::f32 TargetFps = 144.0f;
 constexpr tiny::f32 FrameDelayMilliseconds = 1000.0f / TargetFps;
+
+namespace
+{
+
+struct BouncingLightConfig
+{
+    tiny::Vec2 Position;
+    tiny::Vec2 Velocity;
+    tiny::Light2D Light;
+};
+
+constexpr std::array<BouncingLightConfig, 2> BouncingLightConfigs = {{
+    {{160.0f, 160.0f}, {220.0f, 150.0f}, {0.0f, 1.0f, 0.0f, 25.0f, 12.0f}},
+    {{1120.0f, 560.0f}, {-210.0f, -170.0f}, {0.0f, 0.0f, 1.0f, 25.0f, 12.0f}},
+}};
+
+void ReflectVelocity(tiny::Vec2& Velocity, const tiny::Vec2& SurfaceNormal)
+{
+    const tiny::f32 VelocityAlongNormal = Velocity.X * SurfaceNormal.X + Velocity.Y * SurfaceNormal.Y;
+
+    Velocity.X -= 2.0f * VelocityAlongNormal * SurfaceNormal.X;
+    Velocity.Y -= 2.0f * VelocityAlongNormal * SurfaceNormal.Y;
+}
+
+tiny::AABB MakeLightBounds(const tiny::Entity& LightEntity, tiny::f32 Radius)
+{
+    return {
+        {LightEntity.Transform.X - Radius, LightEntity.Transform.Y - Radius},
+        {LightEntity.Transform.X + Radius, LightEntity.Transform.Y + Radius},
+    };
+}
+
+void UpdateBouncingLight(
+    tiny::Entity& LightEntity,
+    tiny::Vec2& Velocity,
+    tiny::f32 DeltaSeconds,
+    const std::vector<tiny::AABB>& Colliders)
+{
+    if (!LightEntity.LightComponent)
+    {
+        return;
+    }
+
+    const tiny::f32 SafeDeltaSeconds = DeltaSeconds < (1.0f / 30.0f) ? DeltaSeconds : (1.0f / 30.0f);
+    const tiny::f32 Radius = LightEntity.LightComponent->Radius;
+
+    LightEntity.Transform.X += Velocity.X * SafeDeltaSeconds;
+
+    for (const tiny::AABB& Collider : Colliders)
+    {
+        if (!MakeLightBounds(LightEntity, Radius).Intersects(Collider))
+        {
+            continue;
+        }
+
+        if (Velocity.X > 0.0f)
+        {
+            LightEntity.Transform.X = Collider.Min.X - Radius;
+            ReflectVelocity(Velocity, {-1.0f, 0.0f});
+        }
+        else if (Velocity.X < 0.0f)
+        {
+            LightEntity.Transform.X = Collider.Max.X + Radius;
+            ReflectVelocity(Velocity, {1.0f, 0.0f});
+        }
+
+        break;
+    }
+
+    LightEntity.Transform.Y += Velocity.Y * SafeDeltaSeconds;
+
+    for (const tiny::AABB& Collider : Colliders)
+    {
+        if (!MakeLightBounds(LightEntity, Radius).Intersects(Collider))
+        {
+            continue;
+        }
+
+        if (Velocity.Y > 0.0f)
+        {
+            LightEntity.Transform.Y = Collider.Min.Y - Radius;
+            ReflectVelocity(Velocity, {0.0f, -1.0f});
+        }
+        else if (Velocity.Y < 0.0f)
+        {
+            LightEntity.Transform.Y = Collider.Max.Y + Radius;
+            ReflectVelocity(Velocity, {0.0f, 1.0f});
+        }
+
+        break;
+    }
+}
+
+}
 
 int RunEngine(SDL_Window* Window, HWND WindowHandle)
 {
@@ -69,6 +164,22 @@ int RunEngine(SDL_Window* Window, HWND WindowHandle)
     Cat.SpriteComponent->Width = 75.0f;
     Cat.SpriteComponent->Height = 75.0f;
 
+    constexpr tiny::u32 BouncingLightCount = static_cast<tiny::u32>(BouncingLightConfigs.size());
+
+    std::array<tiny::u32, BouncingLightCount> BouncingLightIDs = {};
+    std::array<tiny::Vec2, BouncingLightCount> BouncingLightVelocities = {};
+
+    for (tiny::u32 LightIndex = 0; LightIndex < BouncingLightCount; ++LightIndex)
+    {
+        const BouncingLightConfig& Config = BouncingLightConfigs[LightIndex];
+        tiny::Entity& BouncingLight = GameLevel.CreateEntity();
+        BouncingLightIDs[LightIndex] = BouncingLight.ID;
+        BouncingLight.Transform.X = Config.Position.X;
+        BouncingLight.Transform.Y = Config.Position.Y;
+        BouncingLight.LightComponent = Config.Light;
+        BouncingLightVelocities[LightIndex] = Config.Velocity;
+    }
+
     tiny::ImGuiLayer EditorGui;
     if (!EditorGui.Initialize(Window, GraphicsDevice.GetDevice(), GraphicsDevice.GetContext()))
     {
@@ -109,7 +220,6 @@ int RunEngine(SDL_Window* Window, HWND WindowHandle)
             {
                 bIsRunning = false;
             }
-
         }
         const float ClearColor[4] = {0.0f, 0.0f, 0.0f, 1.0f};
 
@@ -127,6 +237,18 @@ int RunEngine(SDL_Window* Window, HWND WindowHandle)
                 CatController.Update(
                     *Player,
                     GameInput,
+                    DeltaSeconds,
+                    GameLevel.GetColliders());
+            }
+        }
+
+        for (tiny::u32 LightIndex = 0; LightIndex < BouncingLightCount; ++LightIndex)
+        {
+            if (tiny::Entity* CurrentLight = GameLevel.GetEntityByID(BouncingLightIDs[LightIndex]))
+            {
+                UpdateBouncingLight(
+                    *CurrentLight,
+                    BouncingLightVelocities[LightIndex],
                     DeltaSeconds,
                     GameLevel.GetColliders());
             }

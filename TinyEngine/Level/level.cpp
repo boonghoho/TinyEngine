@@ -1,4 +1,4 @@
-﻿#include "level.h"
+#include "level.h"
 
 #include "../Renderer/sprite_renderer.h"
 #include "../../ThirdParty/nlohmann/json.hpp"
@@ -8,9 +8,31 @@
 #include <filesystem>
 #include <fstream>
 #include <string>
+#include <utility>
 
 namespace tiny
 {
+
+namespace
+{
+    f32 GetFloatProperty(const nlohmann::json& Owner, const char* PropertyName, f32 DefaultValue)
+    {
+        if (!Owner.contains("properties") || !Owner.at("properties").is_array())
+        {
+            return DefaultValue;
+        }
+
+        for (const nlohmann::json& Property : Owner.at("properties"))
+        {
+            if (Property.value("name", "") == PropertyName)
+            {
+                return Property.at("value").get<f32>();
+            }
+        }
+
+        return DefaultValue;
+    }
+}
 
 bool Level::Initialize(ID3D11Device* Device, const char* MapFilePath)
 {
@@ -45,17 +67,14 @@ bool Level::Initialize(ID3D11Device* Device, const char* MapFilePath)
         }
 
         const nlohmann::json& Tileset = Tilesets.at(0);
-        const nlohmann::json& Layer = Layers.at(0);
 
         // NOTE(ljh): UV 계산을 단순하게 유지하기 위해 tileset의 margin/spacing은 지원하지 않는다.
         if (Tileset.contains("source") ||
             Tileset.value("tilerendersize", "tile") != "grid" ||
             Tileset.value("margin", 0) != 0 ||
-            Tileset.value("spacing", 0) != 0 ||
-            Layer.value("type", "") != "tilelayer" ||
-            !Layer.at("data").is_array())
+            Tileset.value("spacing", 0) != 0)
         {
-            std::printf("Unsupported Tiled tileset or layer\n");
+            std::printf("Unsupported Tiled tileset\n");
             return false;
         }
 
@@ -72,10 +91,69 @@ bool Level::Initialize(ID3D11Device* Device, const char* MapFilePath)
         TilesetImageHeight = Tileset.at("imageheight").get<i32>();
         const i32 TilesetTileCount = Tileset.at("tilecount").get<i32>();
 
-        // NOTE(ljh): Tiled의 tile layer data는 row-major 순서의 GID(Global Tile ID) 배열로 저장된다.
-        TileGIDs = Layer.at("data").get<std::vector<u32>>();
-
+        TileLayers.clear();
         Colliders.clear();
+        Entities.clear();
+        NextEntityID = 1;
+
+        const std::size_t ExpectedTileCount =
+            static_cast<std::size_t>(MapWidth) * static_cast<std::size_t>(MapHeight);
+
+        // NOTE(ljh): 모든 tile layer는 Tiled에 저장된 순서를 유지해 뒤에서 차례대로 렌더링한다.
+        for (const nlohmann::json& CurrentLayer : Layers)
+        {
+            if (CurrentLayer.value("type", "") != "tilelayer")
+            {
+                continue;
+            }
+
+            if (!CurrentLayer.contains("data") ||
+                !CurrentLayer.at("data").is_array() ||
+                CurrentLayer.at("width").get<i32>() != MapWidth ||
+                CurrentLayer.at("height").get<i32>() != MapHeight)
+            {
+                std::printf("Invalid Tiled tile layer\n");
+                return false;
+            }
+
+            TileLayer NewLayer;
+            NewLayer.TileGIDs = CurrentLayer.at("data").get<std::vector<u32>>();
+            NewLayer.bIsVisible = CurrentLayer.value("visible", true);
+            NewLayer.bCreatesLights = CurrentLayer.value("class", "") == "Light2D";
+
+            if (NewLayer.TileGIDs.size() != ExpectedTileCount)
+            {
+                std::printf("Invalid Tiled tile layer dimensions\n");
+                return false;
+            }
+
+            if (NewLayer.bCreatesLights)
+            {
+                NewLayer.Light.R = GetFloatProperty(CurrentLayer, "LightR", 1.0f);
+                NewLayer.Light.G = GetFloatProperty(CurrentLayer, "LightG", 1.0f);
+                NewLayer.Light.B = GetFloatProperty(CurrentLayer, "LightB", 1.0f);
+                NewLayer.Light.Intensity = GetFloatProperty(CurrentLayer, "LightIntensity", 1.0f);
+                NewLayer.Light.Radius = GetFloatProperty(CurrentLayer, "LightRadius", 16.0f);
+
+                if (NewLayer.Light.R < 0.0f ||
+                    NewLayer.Light.G < 0.0f ||
+                    NewLayer.Light.B < 0.0f ||
+                    NewLayer.Light.Intensity < 0.0f ||
+                    NewLayer.Light.Radius <= 0.0f)
+                {
+                    std::printf("Invalid Light2D tile layer properties\n");
+                    return false;
+                }
+            }
+
+            TileLayers.push_back(std::move(NewLayer));
+        }
+
+        if (TileLayers.empty())
+        {
+            std::printf("Tiled map has no tile layers\n");
+            return false;
+        }
 
         // NOTE(ljh): Objects layer의 Collider 사각형은 회전 없는 world-space AABB로 저장한다.
         for (const nlohmann::json& CurrentLayer : Layers)
@@ -131,16 +209,11 @@ bool Level::Initialize(ID3D11Device* Device, const char* MapFilePath)
             break;
         }
 
-        const std::size_t ExpectedTileCount = static_cast<std::size_t>(MapWidth) * static_cast<std::size_t>(MapHeight);
-
         if (MapWidth <= 0 || MapHeight <= 0 ||
             MapTileWidth <= 0 || MapTileHeight <= 0 ||
             FirstGID == 0 || TilesetColumns <= 0 || TilesetTileCount <= 0 ||
             TilesetTileWidth <= 0 || TilesetTileHeight <= 0 ||
-            TilesetImageWidth <= 0 || TilesetImageHeight <= 0 ||
-            Layer.at("width").get<i32>() != MapWidth ||
-            Layer.at("height").get<i32>() != MapHeight ||
-            TileGIDs.size() != ExpectedTileCount)
+            TilesetImageWidth <= 0 || TilesetImageHeight <= 0)
         {
             std::printf("Invalid Tiled map dimensions\n");
             return false;
@@ -149,13 +222,18 @@ bool Level::Initialize(ID3D11Device* Device, const char* MapFilePath)
         // NOTE(ljh): Tiled는 GID의 상위 bit에 flip/rotation 정보를 저장한다.
         // 현재는 tile transform을 지원하지 않는다.
         constexpr u32 TransformFlagMask = 0xF0000000u;
-        for (u32 GID : TileGIDs)
+        for (const TileLayer& CurrentLayer : TileLayers)
         {
-            if ((GID & TransformFlagMask) != 0 ||
-                (GID != 0 && (GID < FirstGID || GID - FirstGID >= static_cast<u32>(TilesetTileCount))))
+            for (u32 GID : CurrentLayer.TileGIDs)
             {
-                std::printf("Unsupported Tiled tile GID\n");
-                return false;
+                if ((GID & TransformFlagMask) != 0 ||
+                    (GID != 0 &&
+                        (GID < FirstGID ||
+                         GID - FirstGID >= static_cast<u32>(TilesetTileCount))))
+                {
+                    std::printf("Unsupported Tiled tile GID\n");
+                    return false;
+                }
             }
         }
 
@@ -173,20 +251,55 @@ bool Level::Initialize(ID3D11Device* Device, const char* MapFilePath)
             return false;
         }
 
+        std::size_t TileLightCount = 0;
+
+        // NOTE(ljh): Light2D tile layer의 각 타일 중앙에 sprite 없는 Light Entity를 만든다.
+        for (const TileLayer& CurrentLayer : TileLayers)
+        {
+            if (!CurrentLayer.bIsVisible || !CurrentLayer.bCreatesLights)
+            {
+                continue;
+            }
+
+            for (i32 TileY = 0; TileY < MapHeight; ++TileY)
+            {
+                for (i32 TileX = 0; TileX < MapWidth; ++TileX)
+                {
+                    const std::size_t TileIndex =
+                        static_cast<std::size_t>(TileY * MapWidth + TileX);
+
+                    if (CurrentLayer.TileGIDs[TileIndex] == 0)
+                    {
+                        continue;
+                    }
+
+                    Entity& LightEntity = CreateEntity();
+                    LightEntity.Transform.X = (static_cast<f32>(TileX) + 0.5f) * MapTileWidth;
+                    LightEntity.Transform.Y = (static_cast<f32>(TileY) + 0.5f) * MapTileHeight;
+                    LightEntity.LightComponent = CurrentLayer.Light;
+                    ++TileLightCount;
+                }
+            }
+        }
+
         std::printf(
-            "Loaded Tiled map: %s (%dx%d tiles, %zu colliders)\n",
+            "Loaded Tiled map: %s (%dx%d tiles, %zu layers, %zu colliders, %zu lights)\n",
             MapFilePath,
             MapWidth,
             MapHeight,
-            Colliders.size());
+            TileLayers.size(),
+            Colliders.size(),
+            TileLightCount);
 
         return true;
     }
     catch (const std::exception& Error)
     {
         std::printf("Failed to parse Tiled map: %s\n", Error.what());
-        TileGIDs.clear();
+        TileLayers.clear();
         Colliders.clear();
+        Entities.clear();
+        NextEntityID = 1;
 
         return false;
     }
@@ -194,47 +307,49 @@ bool Level::Initialize(ID3D11Device* Device, const char* MapFilePath)
 
 void Level::RenderTileMap(SpriteRenderer& Renderer) const
 {
-    if (TileGIDs.empty())
+    for (const TileLayer& CurrentLayer : TileLayers)
     {
-        return;
-    }
-
-    for (i32 TileY = 0; TileY < MapHeight; ++TileY)
-    {
-        for (i32 TileX = 0; TileX < MapWidth; ++TileX)
+        if (!CurrentLayer.bIsVisible)
         {
-            // NOTE(ljh): 2D tile 좌표를 row-major 1D 배열 index로 변환한다.
-            const std::size_t TileIndex = static_cast<std::size_t>(TileY * MapWidth + TileX);
+            continue;
+        }
 
-            const u32 GID = TileGIDs[TileIndex];
-
-            // NOTE(ljh): Tiled에서 GID 0은 빈 tile을 의미한다.
-            if (GID == 0)
+        for (i32 TileY = 0; TileY < MapHeight; ++TileY)
+        {
+            for (i32 TileX = 0; TileX < MapWidth; ++TileX)
             {
-                continue;
+                // NOTE(ljh): 2D tile 좌표를 row-major 1D 배열 index로 변환한다.
+                const std::size_t TileIndex =
+                    static_cast<std::size_t>(TileY * MapWidth + TileX);
+                const u32 GID = CurrentLayer.TileGIDs[TileIndex];
+
+                // NOTE(ljh): Tiled에서 GID 0은 빈 tile을 의미한다.
+                if (GID == 0)
+                {
+                    continue;
+                }
+
+                // NOTE(ljh): Global Tile ID를 현재 tileset 내부의 local tile ID로 변환한다.
+                const u32 LocalTileID = GID - FirstGID;
+                const i32 SourceColumn = static_cast<i32>(LocalTileID) % TilesetColumns;
+                const i32 SourceRow = static_cast<i32>(LocalTileID) / TilesetColumns;
+
+                // NOTE(ljh): tileset image의 pixel 영역을 shader에서 사용하는 0~1 범위의 UV 좌표로 변환한다.
+                const UVRect SourceUV = {
+                    static_cast<f32>(SourceColumn * TilesetTileWidth) / TilesetImageWidth,
+                    static_cast<f32>(SourceRow * TilesetTileHeight) / TilesetImageHeight,
+                    static_cast<f32>((SourceColumn + 1) * TilesetTileWidth) / TilesetImageWidth,
+                    static_cast<f32>((SourceRow + 1) * TilesetTileHeight) / TilesetImageHeight,
+                };
+
+                Renderer.Draw(
+                    TilesetTexture.GetShaderResourceView(),
+                    static_cast<f32>(TileX * MapTileWidth),
+                    static_cast<f32>(TileY * MapTileHeight),
+                    static_cast<f32>(MapTileWidth),
+                    static_cast<f32>(MapTileHeight),
+                    SourceUV);
             }
-
-            // NOTE(ljh): Global Tile ID를 현재 tileset 내부의 local tile ID로 변환한다.
-            const u32 LocalTileID = GID - FirstGID;
-
-            const i32 SourceColumn = static_cast<i32>(LocalTileID) % TilesetColumns;
-            const i32 SourceRow = static_cast<i32>(LocalTileID) / TilesetColumns;
-
-            // NOTE(ljh): tileset image의 pixel 영역을 shader에서 사용하는 0~1 범위의 UV 좌표로 변환한다.
-            const UVRect SourceUV = {
-                static_cast<f32>(SourceColumn * TilesetTileWidth) / TilesetImageWidth,
-                static_cast<f32>(SourceRow * TilesetTileHeight) / TilesetImageHeight,
-                static_cast<f32>((SourceColumn + 1) * TilesetTileWidth) / TilesetImageWidth,
-                static_cast<f32>((SourceRow + 1) * TilesetTileHeight) / TilesetImageHeight,
-            };
-
-            Renderer.Draw(
-                TilesetTexture.GetShaderResourceView(),
-                static_cast<f32>(TileX * MapTileWidth),
-                static_cast<f32>(TileY * MapTileHeight),
-                static_cast<f32>(MapTileWidth),
-                static_cast<f32>(MapTileHeight),
-                SourceUV);
         }
     }
 }

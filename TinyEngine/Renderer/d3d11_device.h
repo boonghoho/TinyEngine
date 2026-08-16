@@ -5,6 +5,7 @@
 
 #include <Windows.h>
 #include <d3d11.h>
+#include <d3d11_1.h>
 #include <wrl/client.h>
 
 // NOTE(ljh): D3D11 핵심 객체를 소유하고, Render Target 설정과 화면 출력을 관리한다.
@@ -35,6 +36,9 @@ public:
     int GetWidth() const { return Width; }
     int GetHeight() const { return Height; }
 
+    void BeginGpuEvent(const wchar_t* Name);
+    void EndGpuEvent();
+
 private:
     bool CreateBackBufferRenderTarget();
     void SetViewport(int ViewportWidth, int ViewportHeight);
@@ -43,6 +47,7 @@ private:
     Microsoft::WRL::ComPtr<ID3D11DeviceContext> DeviceContext;
     Microsoft::WRL::ComPtr<IDXGISwapChain> SwapChain;
     Microsoft::WRL::ComPtr<ID3D11RenderTargetView> BackBufferRenderTargetView;
+    Microsoft::WRL::ComPtr<ID3DUserDefinedAnnotation> GpuAnnotation;
 
     int Width = 0;
     int Height = 0;

@@ -1,4 +1,4 @@
-﻿#include "render_pipeline.h"
+#include "render_pipeline.h"
 
 #include "d3d11_device.h"
 #include "../Level/level.h"
@@ -41,6 +41,12 @@ bool RenderPipeline::Initialize(ID3D11Device* Device, int InWidth, int InHeight)
         return false;
     }
 
+    if (!RadianceCascades.Initialize(Device, Width, Height))
+    {
+        Release();
+        return false;
+    }
+
     if (!CompositePass.Initialize(Device, L"Shaders/composite_scene.hlsl"))
     {
         Release();
@@ -53,6 +59,7 @@ bool RenderPipeline::Initialize(ID3D11Device* Device, int InWidth, int InHeight)
 void RenderPipeline::Release()
 {
     CompositePass.Release();
+    RadianceCascades.Release();
     LightTexture.Release();
     SpriteColorTexture.Release();
 
@@ -62,9 +69,20 @@ void RenderPipeline::Release()
 
 void RenderPipeline::RenderFrame(D3D11Device& GraphicsDevice, const Level& GameLevel)
 {
+    // NOTE(ljh): 1. 조명의 영향을 받기 전 sprite/tile 원본 색상을 그린다.
+    GraphicsDevice.BeginGpuEvent(L"RenderSprites");
     RenderSprites(GraphicsDevice, GameLevel);
-    RenderLighting(GraphicsDevice);
+    GraphicsDevice.EndGpuEvent();
+
+    // NOTE(ljh): 2. RC를 계산해 화면 크기의 조명 결과를 만든다.
+    GraphicsDevice.BeginGpuEvent(L"RenderLighting");
+    RenderLighting(GraphicsDevice, GameLevel);
+    GraphicsDevice.EndGpuEvent();
+
+    // NOTE(ljh): 3. 원본 색상과 조명을 곱하고 tone mapping하여 back buffer에 출력한다.
+    GraphicsDevice.BeginGpuEvent(L"CompositeScene");
     CompositeScene(GraphicsDevice);
+    GraphicsDevice.EndGpuEvent();
 }
 
 void RenderPipeline::RenderSprites(D3D11Device& GraphicsDevice, const Level& GameLevel)
@@ -105,16 +123,24 @@ void RenderPipeline::RenderSprites(D3D11Device& GraphicsDevice, const Level& Gam
     SpriteRenderer.End();
 }
 
-void RenderPipeline::RenderLighting(D3D11Device& GraphicsDevice)
+void RenderPipeline::RenderLighting(D3D11Device& GraphicsDevice, const Level& GameLevel)
 {
-    // NOTE(ljh): 조명이 아직 없으므로 모든 pixel이 원래 색을 유지하도록 흰색으로 채운다.
-    const float DefaultLight[4] = {1.0f, 1.0f, 1.0f, 1.0f};
+    RadianceCascades.GenerateLighting(GraphicsDevice, GameLevel);
+
+    const float ClearColor[4] = {0.0f, 0.0f, 0.0f, 1.0f};
 
     GraphicsDevice.SetRenderTarget(
         LightTexture.GetRenderTargetView(),
         LightTexture.GetWidth(),
         LightTexture.GetHeight());
-    GraphicsDevice.ClearRenderTarget(LightTexture.GetRenderTargetView(), DefaultLight);
+    GraphicsDevice.ClearRenderTarget(LightTexture.GetRenderTargetView(), ClearColor);
+
+    RadianceCascades.ResolveLighting(
+        GraphicsDevice.GetContext(),
+        Width,
+        Height,
+        0.1f,
+        1.0f);
 }
 
 void RenderPipeline::CompositeScene(D3D11Device& GraphicsDevice)
@@ -131,11 +157,9 @@ void RenderPipeline::CompositeScene(D3D11Device& GraphicsDevice)
         GraphicsDevice.GetContext(),
         static_cast<float>(Width),
         static_cast<float>(Height),
-        0.0f,
-        0.0f,
-        0.0f,
         Inputs,
-        2);
+        2,
+        1.5f);
 }
 
 }

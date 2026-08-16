@@ -1,4 +1,4 @@
-﻿#pragma once
+#pragma once
 
 #include "../Core/math_types.h"
 #include "entity.h"
@@ -27,8 +27,16 @@ public:
     const std::vector<AABB>& GetColliders() const { return Colliders; }
 
 private:
+    struct TileLayer
+    {
+        std::vector<u32> TileGIDs;
+        Light2D Light;
+        bool bIsVisible = true;
+        bool bCreatesLights = false;
+    };
+
     Texture2D TilesetTexture;
-    std::vector<u32> TileGIDs;
+    std::vector<TileLayer> TileLayers;
 
     i32 MapWidth = 0;
     i32 MapHeight = 0;

@@ -1,15 +1,3 @@
-cbuffer FrameConstants : register(b0)
-{
-    float2 Resolution;
-    float2 Mouse;
-    float Time;
-    float Param0;
-    float Param1;
-    float Param2;
-    float Param3;
-    float3 Padding;
-};
-
 Texture2D SceneTexture : register(t0);
 SamplerState SceneSampler : register(s0);
 

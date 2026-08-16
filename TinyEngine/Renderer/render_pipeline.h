@@ -1,6 +1,7 @@
 #pragma once
 
 #include "fullscreen_pass.h"
+#include "radiance_cascade_renderer.h"
 #include "render_texture.h"
 #include "sprite_renderer.h"
 
@@ -27,7 +28,7 @@ public:
 
 private:
     void RenderSprites(D3D11Device& GraphicsDevice, const Level& GameLevel);
-    void RenderLighting(D3D11Device& GraphicsDevice);
+    void RenderLighting(D3D11Device& GraphicsDevice, const Level& GameLevel);
     void CompositeScene(D3D11Device& GraphicsDevice);
 
     int Width = 0;
@@ -36,6 +37,7 @@ private:
     SpriteRenderer SpriteRenderer;
     RenderTexture SpriteColorTexture;
     RenderTexture LightTexture;
+    RadianceCascadeRenderer RadianceCascades;
     FullscreenPass CompositePass;
 };
 

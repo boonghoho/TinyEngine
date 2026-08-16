@@ -148,7 +148,6 @@
     <ClCompile Include="Renderer\radiance_cascade_renderer.cpp" />
     <ClCompile Include="Renderer\render_pipeline.cpp" />
     <ClCompile Include="Renderer\shader.cpp" />
-    <ClCompile Include="Renderer\scene_texture.cpp" />
     <ClCompile Include="Renderer\render_texture.cpp" />
     <ClCompile Include="Renderer\sprite_renderer.cpp" />
     <ClCompile Include="Renderer\texture2d.cpp" />
@@ -164,6 +163,7 @@
     <ClInclude Include="Editor\imgui_layer.h" />
     <ClInclude Include="Game\player_controller.h" />
     <ClInclude Include="Input\input.h" />
+    <ClInclude Include="Level\Components\light2d.h" />
     <ClInclude Include="Level\Components\sprite.h" />
     <ClInclude Include="Level\Components\transform2d.h" />
     <ClInclude Include="Level\entity.h" />
@@ -174,7 +174,6 @@
     <ClInclude Include="Renderer\radiance_cascade_renderer.h" />
     <ClInclude Include="Renderer\render_pipeline.h" />
     <ClInclude Include="Renderer\shader.h" />
-    <ClInclude Include="Renderer\scene_texture.h" />
     <ClInclude Include="Renderer\render_texture.h" />
     <ClInclude Include="Renderer\sprite_renderer.h" />
     <ClInclude Include="Renderer\texture2d.h" />
@@ -183,9 +182,9 @@
     <None Include="..\ThirdParty\nlohmann\LICENSE.MIT" />
     <None Include="Shaders\composite_scene.hlsl" />
     <None Include="Shaders\display_texture.hlsl" />
-    <None Include="Shaders\rc_composite.hlsl" />
     <None Include="Shaders\rc_gather.hlsl" />
     <None Include="Shaders\rc_merge.hlsl" />
+    <None Include="Shaders\rc_resolve.hlsl" />
     <None Include="Shaders\sprite.hlsl" />
     <None Include="ThirdParty.props" />
   </ItemGroup>

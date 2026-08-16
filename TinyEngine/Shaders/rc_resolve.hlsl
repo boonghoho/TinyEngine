@@ -1,28 +1,11 @@
 cbuffer FrameConstants : register(b0)
 {
     float2 Resolution;
-    float2 Mouse;
-    float Time;
-    float Param0;
-    float Param1;
-    float Param2;
-    float Param3;
-    float3 Padding;
+    float AmbientStrength;
+    float IndirectStrength;
 };
 
-Texture2D SceneTexture : register(t0);
-Texture2D MergedCascade0Texture : register(t1);
-SamplerState SceneSampler : register(s0);
-
-float GetIndirectStrength()
-{
-    return max(Param0, 0.0);
-}
-
-float GetExposure()
-{
-    return max(Param1, 0.001);
-}
+Texture2D MergedCascade0Texture : register(t0);
 
 struct VSOutput
 {
@@ -47,29 +30,32 @@ VSOutput VSMain(uint VertexId : SV_VertexID)
 
 float3 LoadProbeIrradiance(uint2 ProbeCoord, uint2 ProbeCount)
 {
-    const uint RaySide = 4;
-    const uint DirCount = RaySide * RaySide;
+    const uint RaySide = 8;
+    const uint DirectionCount = RaySide * RaySide;
 
     ProbeCoord = min(ProbeCoord, ProbeCount - 1);
-
     float3 Irradiance = float3(0.0, 0.0, 0.0);
 
-    // NOTE(ljh): C0 probe가 모든 방향에서 모은 빛을 평균낸다.
-    [loop]
-    for (uint DirIndex = 0; DirIndex < DirCount; ++DirIndex)
+    // NOTE(ljh): 한 probe의 64방향 radiance를 평균내 방향성이 없는 irradiance 하나로 만든다.
+    [unroll]
+    for (uint DirectionIndex = 0; DirectionIndex < DirectionCount; ++DirectionIndex)
     {
-        uint2 DirCoord = uint2(DirIndex % RaySide, DirIndex / RaySide);
-        uint2 TexelCoord = ProbeCoord * RaySide + DirCoord;
+        uint2 DirectionCoord = uint2(
+            DirectionIndex % RaySide,
+            DirectionIndex / RaySide
+        );
+        uint2 TexelCoord = ProbeCoord * RaySide + DirectionCoord;
+
         Irradiance += MergedCascade0Texture.Load(int3(TexelCoord, 0)).rgb;
     }
 
-    return Irradiance / (float)DirCount;
+    return Irradiance / (float) DirectionCount;
 }
 
-float3 LoadIrradianceFromCascade0(float2 PixelCoord)
+float3 LoadIrradiance(float2 PixelCoord)
 {
-    const uint RaySide = 4;
-    const float ProbeSpacingPixels = 16.0;
+    const uint RaySide = 8;
+    const float ProbeSpacingPixels = 4.0;
 
     uint Width = 0;
     uint Height = 0;
@@ -77,12 +63,10 @@ float3 LoadIrradianceFromCascade0(float2 PixelCoord)
 
     uint2 ProbeCount = uint2(Width / RaySide, Height / RaySide);
     float2 ProbeSpace = PixelCoord / ProbeSpacingPixels - float2(0.5, 0.5);
-    int2 BaseProbeCoord = (int2)floor(ProbeSpace);
+    int2 BaseProbeCoord = (int2) floor(ProbeSpace);
     float2 Ratio = frac(ProbeSpace);
-
     float3 Irradiance = float3(0.0, 0.0, 0.0);
 
-    // NOTE(ljh): 주변 probe 4개를 bilinear 보간해 격자 형태를 줄인다.
     [unroll]
     for (int OffsetY = 0; OffsetY < 2; ++OffsetY)
     {
@@ -95,8 +79,7 @@ float3 LoadIrradianceFromCascade0(float2 PixelCoord)
             float WeightX = OffsetX == 0 ? 1.0 - Ratio.x : Ratio.x;
             float WeightY = OffsetY == 0 ? 1.0 - Ratio.y : Ratio.y;
             float Weight = WeightX * WeightY;
-
-            Irradiance += LoadProbeIrradiance((uint2)ProbeCoordSigned, ProbeCount) * Weight;
+            Irradiance += LoadProbeIrradiance((uint2) ProbeCoordSigned, ProbeCount) * Weight;
         }
     }
 
@@ -105,18 +88,10 @@ float3 LoadIrradianceFromCascade0(float2 PixelCoord)
 
 float4 PSMain(VSOutput Input) : SV_TARGET
 {
-    float3 SceneColorSrgb = SceneTexture.Sample(SceneSampler, Input.Uv).rgb;
-    float3 SceneColor = pow(saturate(SceneColorSrgb), 2.2);
     float2 PixelCoord = Input.Uv * Resolution;
-    float3 Irradiance = LoadIrradianceFromCascade0(PixelCoord);
+    float3 Irradiance = LoadIrradiance(PixelCoord);
 
-    float3 DirectEmission = SceneColor * 1.15;
-    float3 IndirectLight = Irradiance * GetIndirectStrength();
-    float3 Color = DirectEmission + IndirectLight;
+    float3 Lighting = max(AmbientStrength, 0.0) + Irradiance * max(IndirectStrength, 0.0);
 
-    // NOTE(ljh): Tone mapping으로 밝은 색이 흰색으로 뭉치는 것을 줄인다.
-    Color = 1.0 - exp(-Color * GetExposure());
-    Color = pow(saturate(Color), 1.0 / 2.2);
-
-    return float4(Color, 1.0);
+    return float4(Lighting, 1.0);
 }

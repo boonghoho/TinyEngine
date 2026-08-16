@@ -23,9 +23,6 @@ public:
         ID3D11DeviceContext* DeviceContext,
         float Width,
         float Height,
-        float MouseX,
-        float MouseY,
-        float TimeSeconds,
         ID3D11ShaderResourceView* ShaderResourceView
     );
 
@@ -33,28 +30,18 @@ public:
         ID3D11DeviceContext* DeviceContext,
         float Width,
         float Height,
-        float MouseX,
-        float MouseY,
-        float TimeSeconds,
         ID3D11ShaderResourceView* const* ShaderResourceViews,
         unsigned int ShaderResourceViewCount,
         float Param0 = 0.0f,
-        float Param1 = 0.0f,
-        float Param2 = 0.0f,
-        float Param3 = 0.0f
+        float Param1 = 0.0f
     );
 
 private:
     struct FrameConstants
     {
         float Resolution[2];
-        float Mouse[2];
-        float Time;
         float Param0;
         float Param1;
-        float Param2;
-        float Param3;
-        float Padding[3];
     };
 
     Microsoft::WRL::ComPtr<ID3D11VertexShader> VertexShader;

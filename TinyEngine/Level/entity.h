@@ -1,6 +1,7 @@
 ﻿#pragma once
 
 #include "../Core/types.h"
+#include "Components/light2d.h"
 #include "Components/transform2d.h"
 #include "Components/sprite.h"
 
@@ -17,6 +18,7 @@ struct Entity
     Transform2D Transform;
 
     std::optional<Sprite> SpriteComponent;
+    std::optional<Light2D> LightComponent;
 };
 
 }

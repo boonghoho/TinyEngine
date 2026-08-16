@@ -110,9 +110,6 @@ void FullscreenPass::Render(
     ID3D11DeviceContext* DeviceContext,
     float Width,
     float Height,
-    float MouseX,
-    float MouseY,
-    float TimeSeconds,
     ID3D11ShaderResourceView* ShaderResourceView
 )
 {
@@ -120,9 +117,6 @@ void FullscreenPass::Render(
         DeviceContext,
         Width,
         Height,
-        MouseX,
-        MouseY,
-        TimeSeconds,
         &ShaderResourceView,
         1
     );
@@ -132,27 +126,17 @@ void FullscreenPass::Render(
     ID3D11DeviceContext* DeviceContext,
     float Width,
     float Height,
-    float MouseX,
-    float MouseY,
-    float TimeSeconds,
     ID3D11ShaderResourceView* const* ShaderResourceViews,
     unsigned int ShaderResourceViewCount,
     float Param0,
-    float Param1,
-    float Param2,
-    float Param3
+    float Param1
 )
 {
     FrameConstants Constants = {};
     Constants.Resolution[0] = Width;
     Constants.Resolution[1] = Height;
-    Constants.Mouse[0] = MouseX;
-    Constants.Mouse[1] = MouseY;
-    Constants.Time = TimeSeconds;
     Constants.Param0 = Param0;
     Constants.Param1 = Param1;
-    Constants.Param2 = Param2;
-    Constants.Param3 = Param3;
 
     DeviceContext->UpdateSubresource(
         FrameConstantBuffer.Get(),
