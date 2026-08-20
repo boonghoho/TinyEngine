@@ -257,6 +257,16 @@ int RunEngine(SDL_Window* Window, HWND WindowHandle)
         ImGui::Begin("TinyEngine");
         ImGui::Text("FPS: %.1f / %.0f", CurrentFps, TargetFps);
         ImGui::Text("Frame: %.2f ms / %.2f ms", FrameTimeMilliseconds, FrameDelayMilliseconds);
+
+        bool bEnableRadianceCascades = RenderPipeline.IsRadianceCascadesEnabled();
+        if (ImGui::Checkbox("Radiance Cascades", &bEnableRadianceCascades))
+        {
+            RenderPipeline.SetLightingMode(
+                bEnableRadianceCascades
+                    ? tiny::LightingMode::RadianceCascades
+                    : tiny::LightingMode::Unlit);
+        }
+
         ImGui::End();
 
         GraphicsDevice.BeginFrame(ClearColor);

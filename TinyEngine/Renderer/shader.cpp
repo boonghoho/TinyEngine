@@ -17,13 +17,21 @@ bool CompileShaderFromFile(
 {
     ID3DBlob* ErrorBlob = nullptr;
 
+    UINT CompileFlags = 0;
+
+#if defined(_DEBUG)
+    CompileFlags |= D3DCOMPILE_DEBUG | D3DCOMPILE_SKIP_OPTIMIZATION;
+#else
+    CompileFlags |= D3DCOMPILE_OPTIMIZATION_LEVEL3;
+#endif
+
     HRESULT Result = D3DCompileFromFile(
         FilePath,
         nullptr,
         D3D_COMPILE_STANDARD_FILE_INCLUDE,
         EntryPoint,
         TargetProfile,
-        D3DCOMPILE_DEBUG | D3DCOMPILE_SKIP_OPTIMIZATION,
+        CompileFlags,
         0,
         OutBlob,
         &ErrorBlob

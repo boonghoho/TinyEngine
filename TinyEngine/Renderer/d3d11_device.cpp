@@ -1,4 +1,4 @@
-﻿#include "d3d11_device.h"
+#include "d3d11_device.h"
 
 #include <cstdio>
 
@@ -57,18 +57,18 @@ bool D3D11Device::Initialize(HWND WindowHandle, int InWidth, int InHeight)
         nullptr,
         DeviceContext.ReleaseAndGetAddressOf());
 
-    HRESULT AnnotationResult = DeviceContext.As(&GpuAnnotation);
-
-    if (FAILED(AnnotationResult))
-    {
-        std::printf("ID3DUserDefinedAnnotation failed: 0x%08X\n", AnnotationResult);
-    }
-
     if (FAILED(Result))
     {
         std::printf("D3D11CreateDeviceAndSwapChain failed: 0x%08X\n", Result);
         Release();
         return false;
+    }
+
+    const HRESULT AnnotationResult = DeviceContext.As(&GpuAnnotation);
+
+    if (FAILED(AnnotationResult))
+    {
+        std::printf("ID3DUserDefinedAnnotation failed: 0x%08X\n", AnnotationResult);
     }
 
     if (!CreateBackBufferRenderTarget())
@@ -84,6 +84,7 @@ bool D3D11Device::Initialize(HWND WindowHandle, int InWidth, int InHeight)
 
 void D3D11Device::Release()
 {
+    GpuAnnotation.Reset();
     BackBufferRenderTargetView.Reset();
     SwapChain.Reset();
     DeviceContext.Reset();

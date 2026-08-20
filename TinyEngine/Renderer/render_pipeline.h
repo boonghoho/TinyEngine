@@ -11,6 +11,12 @@ namespace tiny
 class D3D11Device;
 class Level;
 
+enum class LightingMode
+{
+    Unlit,
+    RadianceCascades,
+};
+
 // NOTE(ljh): 한 frame의 게임 장면을 어떤 순서로 그릴지 관리한다.
 class RenderPipeline
 {
@@ -26,10 +32,14 @@ public:
 
     void RenderFrame(D3D11Device& GraphicsDevice, const Level& GameLevel);
 
+    void SetLightingMode(LightingMode Mode) { CurrentLightingMode = Mode; }
+    LightingMode GetLightingMode() const { return CurrentLightingMode; }
+    bool IsRadianceCascadesEnabled() const { return CurrentLightingMode == LightingMode::RadianceCascades; }
+
 private:
     void RenderSprites(D3D11Device& GraphicsDevice, const Level& GameLevel);
     void RenderLighting(D3D11Device& GraphicsDevice, const Level& GameLevel);
-    void CompositeScene(D3D11Device& GraphicsDevice);
+    void CompositeScene(D3D11Device& GraphicsDevice, bool bUseLighting);
 
     int Width = 0;
     int Height = 0;
@@ -39,6 +49,8 @@ private:
     RenderTexture LightTexture;
     RadianceCascadeRenderer RadianceCascades;
     FullscreenPass CompositePass;
+
+    LightingMode CurrentLightingMode = LightingMode::RadianceCascades;
 };
 
 }

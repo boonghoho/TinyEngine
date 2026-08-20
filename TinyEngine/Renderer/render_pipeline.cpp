@@ -69,19 +69,24 @@ void RenderPipeline::Release()
 
 void RenderPipeline::RenderFrame(D3D11Device& GraphicsDevice, const Level& GameLevel)
 {
+    const bool bUseRadianceCascades = IsRadianceCascadesEnabled();
+
     // NOTE(ljh): 1. 조명의 영향을 받기 전 sprite/tile 원본 색상을 그린다.
     GraphicsDevice.BeginGpuEvent(L"RenderSprites");
     RenderSprites(GraphicsDevice, GameLevel);
     GraphicsDevice.EndGpuEvent();
 
     // NOTE(ljh): 2. RC를 계산해 화면 크기의 조명 결과를 만든다.
-    GraphicsDevice.BeginGpuEvent(L"RenderLighting");
-    RenderLighting(GraphicsDevice, GameLevel);
-    GraphicsDevice.EndGpuEvent();
+    if (bUseRadianceCascades)
+    {
+        GraphicsDevice.BeginGpuEvent(L"RenderLighting");
+        RenderLighting(GraphicsDevice, GameLevel);
+        GraphicsDevice.EndGpuEvent();
+    }
 
     // NOTE(ljh): 3. 원본 색상과 조명을 곱하고 tone mapping하여 back buffer에 출력한다.
     GraphicsDevice.BeginGpuEvent(L"CompositeScene");
-    CompositeScene(GraphicsDevice);
+    CompositeScene(GraphicsDevice, bUseRadianceCascades);
     GraphicsDevice.EndGpuEvent();
 }
 
@@ -143,7 +148,7 @@ void RenderPipeline::RenderLighting(D3D11Device& GraphicsDevice, const Level& Ga
         1.0f);
 }
 
-void RenderPipeline::CompositeScene(D3D11Device& GraphicsDevice)
+void RenderPipeline::CompositeScene(D3D11Device& GraphicsDevice, bool bUseLighting)
 {
     GraphicsDevice.SetBackBufferRenderTarget();
 
@@ -159,7 +164,8 @@ void RenderPipeline::CompositeScene(D3D11Device& GraphicsDevice)
         static_cast<float>(Height),
         Inputs,
         2,
-        1.5f);
+        1.5f,
+        bUseLighting ? 1.0f : 0.0f);
 }
 
 }

@@ -2,6 +2,7 @@ cbuffer FrameConstants : register(b0)
 {
     float2 Resolution;
     float Param0;
+    float Param1;
 };
 
 Texture2D SpriteColorTexture : register(t0);
@@ -11,6 +12,11 @@ SamplerState SceneSampler : register(s0);
 float GetExposure()
 {
     return max(Param0, 0.001);
+}
+
+bool ShouldUseLighting()
+{
+    return Param1 > 0.5;
 }
 
 struct VSOutput
@@ -38,7 +44,12 @@ float4 PSMain(VSOutput Input) : SV_TARGET
 {
     float4 SpriteColorSrgb = SpriteColorTexture.Sample(SceneSampler, Input.Uv);
     float3 SceneColor = pow(saturate(SpriteColorSrgb.rgb), 2.2);
-    float3 Lighting = max(LightTexture.Sample(SceneSampler, Input.Uv).rgb, 0.0);
+    float3 Lighting = float3(1.0, 1.0, 1.0);
+
+    if (ShouldUseLighting())
+    {
+        Lighting = max(LightTexture.Sample(SceneSampler, Input.Uv).rgb, 0.0);
+    }
     
     float3 Color = SceneColor * Lighting;
 
