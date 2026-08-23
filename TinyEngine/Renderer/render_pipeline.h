@@ -1,5 +1,6 @@
 #pragma once
 
+#include "d3d11_gpu_profiler.h"
 #include "fullscreen_pass.h"
 #include "radiance_cascade_renderer.h"
 #include "render_texture.h"
@@ -36,6 +37,9 @@ public:
     LightingMode GetLightingMode() const { return CurrentLightingMode; }
     bool IsRadianceCascadesEnabled() const { return CurrentLightingMode == LightingMode::RadianceCascades; }
 
+    const GpuPassTiming& GetGpuTiming(GpuPass Pass) const { return GpuProfiler.GetTiming(Pass); }
+    bool IsGpuProfilerAvailable() const { return GpuProfiler.IsInitialized(); }
+
 private:
     void RenderSprites(D3D11Device& GraphicsDevice, const Level& GameLevel);
     void RenderLighting(D3D11Device& GraphicsDevice, const Level& GameLevel);
@@ -49,6 +53,7 @@ private:
     RenderTexture LightTexture;
     RadianceCascadeRenderer RadianceCascades;
     FullscreenPass CompositePass;
+    D3D11GpuProfiler GpuProfiler;
 
     LightingMode CurrentLightingMode = LightingMode::RadianceCascades;
 };

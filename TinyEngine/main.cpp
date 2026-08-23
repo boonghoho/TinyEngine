@@ -267,6 +267,56 @@ int RunEngine(SDL_Window* Window, HWND WindowHandle)
                     : tiny::LightingMode::Unlit);
         }
 
+        if (RenderPipeline.IsGpuProfilerAvailable())
+        {
+            const tiny::GpuPassTiming& SpriteTiming = RenderPipeline.GetGpuTiming(tiny::GpuPass::Sprites);
+            const tiny::GpuPassTiming& LightingTiming = RenderPipeline.GetGpuTiming(tiny::GpuPass::Lighting);
+            const tiny::GpuPassTiming& CompositeTiming = RenderPipeline.GetGpuTiming(tiny::GpuPass::Composite);
+
+            ImGui::SeparatorText("GPU Scene Passes");
+
+            if (SpriteTiming.bIsValid)
+            {
+                ImGui::Text(
+                    "Sprites:   %.3f ms",
+                    SpriteTiming.Milliseconds);
+            }
+            else
+            {
+                ImGui::TextUnformatted("Sprites:   collecting...");
+            }
+
+            if (!RenderPipeline.IsRadianceCascadesEnabled())
+            {
+                ImGui::TextUnformatted("Lighting:  N/A (disabled)");
+            }
+            else if (LightingTiming.bIsValid)
+            {
+                ImGui::Text(
+                    "Lighting:  %.3f ms",
+                    LightingTiming.Milliseconds);
+            }
+            else
+            {
+                ImGui::TextUnformatted("Lighting:  collecting...");
+            }
+
+            if (CompositeTiming.bIsValid)
+            {
+                ImGui::Text(
+                    "Composite: %.3f ms",
+                    CompositeTiming.Milliseconds);
+            }
+            else
+            {
+                ImGui::TextUnformatted("Composite: collecting...");
+            }
+        }
+        else
+        {
+            ImGui::TextUnformatted("GPU profiler unavailable");
+        }
+
         ImGui::End();
 
         GraphicsDevice.BeginFrame(ClearColor);

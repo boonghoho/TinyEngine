@@ -53,11 +53,15 @@ bool RenderPipeline::Initialize(ID3D11Device* Device, int InWidth, int InHeight)
         return false;
     }
 
+    // NOTE(ljh): Profiler가 초기화되지 않아도 renderer 자체는 계속 사용할 수 있음
+    (void)GpuProfiler.Initialize(Device);
+
     return true;
 }
 
 void RenderPipeline::Release()
 {
+    GpuProfiler.Release();
     CompositePass.Release();
     RadianceCascades.Release();
     LightTexture.Release();
@@ -69,25 +73,36 @@ void RenderPipeline::Release()
 
 void RenderPipeline::RenderFrame(D3D11Device& GraphicsDevice, const Level& GameLevel)
 {
+    ID3D11DeviceContext* DeviceContext = GraphicsDevice.GetContext();
     const bool bUseRadianceCascades = IsRadianceCascadesEnabled();
 
+    GpuProfiler.BeginFrame(DeviceContext);
+
     // NOTE(ljh): 1. 조명의 영향을 받기 전 sprite/tile 원본 색상을 그린다.
+    GpuProfiler.BeginPass(DeviceContext, GpuPass::Sprites);
     GraphicsDevice.BeginGpuEvent(L"RenderSprites");
     RenderSprites(GraphicsDevice, GameLevel);
     GraphicsDevice.EndGpuEvent();
+    GpuProfiler.EndPass(DeviceContext, GpuPass::Sprites);
 
     // NOTE(ljh): 2. RC를 계산해 화면 크기의 조명 결과를 만든다.
     if (bUseRadianceCascades)
     {
+        GpuProfiler.BeginPass(DeviceContext, GpuPass::Lighting);
         GraphicsDevice.BeginGpuEvent(L"RenderLighting");
         RenderLighting(GraphicsDevice, GameLevel);
         GraphicsDevice.EndGpuEvent();
+        GpuProfiler.EndPass(DeviceContext, GpuPass::Lighting);
     }
 
     // NOTE(ljh): 3. 원본 색상과 조명을 곱하고 tone mapping하여 back buffer에 출력한다.
+    GpuProfiler.BeginPass(DeviceContext, GpuPass::Composite);
     GraphicsDevice.BeginGpuEvent(L"CompositeScene");
     CompositeScene(GraphicsDevice, bUseRadianceCascades);
     GraphicsDevice.EndGpuEvent();
+    GpuProfiler.EndPass(DeviceContext, GpuPass::Composite);
+
+    GpuProfiler.EndFrame(DeviceContext);
 }
 
 void RenderPipeline::RenderSprites(D3D11Device& GraphicsDevice, const Level& GameLevel)

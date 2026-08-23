@@ -144,6 +144,7 @@
     <ClCompile Include="main.cpp" />
     <ClCompile Include="Memory\memory_arena.cpp" />
     <ClCompile Include="Renderer\d3d11_device.cpp" />
+    <ClCompile Include="Renderer\d3d11_gpu_profiler.cpp" />
     <ClCompile Include="Renderer\fullscreen_pass.cpp" />
     <ClCompile Include="Renderer\radiance_cascade_renderer.cpp" />
     <ClCompile Include="Renderer\render_pipeline.cpp" />
@@ -170,6 +171,7 @@
     <ClInclude Include="Level\level.h" />
     <ClInclude Include="Memory\memory_arena.h" />
     <ClInclude Include="Renderer\d3d11_device.h" />
+    <ClInclude Include="Renderer\d3d11_gpu_profiler.h" />
     <ClInclude Include="Renderer\fullscreen_pass.h" />
     <ClInclude Include="Renderer\radiance_cascade_renderer.h" />
     <ClInclude Include="Renderer\render_pipeline.h" />
