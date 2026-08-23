@@ -1,9 +1,12 @@
 .tools/
 .vs/
 x64/
+Dist/
 Docs/
 AGENTS.md
 agents.md
+
+Docs/*
 
 TinyEngine/.vs/
 TinyEngine/x64/

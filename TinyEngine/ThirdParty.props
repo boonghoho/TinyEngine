@@ -10,7 +10,9 @@
       <AdditionalDependencies>SDL3.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <PostBuildEvent>
-      <Command>if exist "$(SolutionDir)ThirdParty\SDL3\VisualC\$(Platform)\$(Configuration)\SDL3.dll" copy /Y "$(SolutionDir)ThirdParty\SDL3\VisualC\$(Platform)\$(Configuration)\SDL3.dll" "$(OutDir)"</Command>
+      <Command>if exist "$(SolutionDir)ThirdParty\SDL3\VisualC\$(Platform)\$(Configuration)\SDL3.dll" copy /Y "$(SolutionDir)ThirdParty\SDL3\VisualC\$(Platform)\$(Configuration)\SDL3.dll" "$(OutDir)"
+if exist "$(SolutionDir)Assets" xcopy /E /I /Y "$(SolutionDir)Assets" "$(OutDir)Assets"
+if exist "$(ProjectDir)Shaders" xcopy /E /I /Y "$(ProjectDir)Shaders" "$(OutDir)Shaders"</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
 </Project>

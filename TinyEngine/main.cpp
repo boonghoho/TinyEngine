@@ -20,6 +20,8 @@
 
 #include <array>
 #include <cstdio>
+#include <filesystem>
+#include <string>
 
 constexpr tiny::i32 WindowWidth = 1280;
 constexpr tiny::i32 WindowHeight = 720;
@@ -122,6 +124,25 @@ void UpdateBouncingLight(
 
 int RunEngine(SDL_Window* Window, HWND WindowHandle)
 {
+    const char* BasePath = SDL_GetBasePath();
+    if (!BasePath)
+    {
+        std::printf("SDL_GetBasePath failed: %s\n", SDL_GetError());
+        return 1;
+    }
+
+    const std::u8string BasePathUtf8(reinterpret_cast<const char8_t*>(BasePath));
+    const std::filesystem::path ExecutableDirectory(BasePathUtf8);
+
+    std::error_code WorkingDirectoryError;
+    std::filesystem::current_path(ExecutableDirectory, WorkingDirectoryError);
+
+    if (WorkingDirectoryError)
+    {
+        std::printf("Failed to set executable directory: %s\n", WorkingDirectoryError.message().c_str());
+        return 1;
+    }
+
     tiny::D3D11Device GraphicsDevice;
     if (!GraphicsDevice.Initialize(WindowHandle, WindowWidth, WindowHeight))
     {
@@ -137,7 +158,7 @@ int RunEngine(SDL_Window* Window, HWND WindowHandle)
     // NOTE(ljh): 현재는 내가 예전에 만든 Magicat 이미지를 사용한다.
     tiny::Texture2D MagicatTexture;
 
-    if (!MagicatTexture.LoadFromFile(GraphicsDevice.GetDevice(), "../Assets/magicat.png"))
+    if (!MagicatTexture.LoadFromFile(GraphicsDevice.GetDevice(), "Assets/magicat.png"))
     {
         return 1;
     }
@@ -145,7 +166,7 @@ int RunEngine(SDL_Window* Window, HWND WindowHandle)
     tiny::Level GameLevel;
 
     // NOTE(ljh): 현재 tiled 로 만든 임의의 맵을 불러온다.
-    if (!GameLevel.Initialize(GraphicsDevice.GetDevice(), "../Assets/Maps/dungeon_001.json"))
+    if (!GameLevel.Initialize(GraphicsDevice.GetDevice(), "Assets/Maps/dungeon_001.json"))
     {
         return 1;
     }
