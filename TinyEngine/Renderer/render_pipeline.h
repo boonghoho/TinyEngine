@@ -11,6 +11,7 @@ namespace tiny
 
 class D3D11Device;
 class Level;
+struct Camera2D;
 
 enum class LightingMode
 {
@@ -31,7 +32,10 @@ public:
     bool Initialize(ID3D11Device* Device, int Width, int Height);
     void Release();
 
-    void RenderFrame(D3D11Device& GraphicsDevice, const Level& GameLevel);
+    void RenderFrame(
+        D3D11Device& GraphicsDevice,
+        const Level& GameLevel,
+        const Camera2D& Camera);
 
     void SetLightingMode(LightingMode Mode) { CurrentLightingMode = Mode; }
     LightingMode GetLightingMode() const { return CurrentLightingMode; }
@@ -41,7 +45,10 @@ public:
     bool IsGpuProfilerAvailable() const { return GpuProfiler.IsInitialized(); }
 
 private:
-    void RenderSprites(D3D11Device& GraphicsDevice, const Level& GameLevel);
+    void RenderSprites(
+        D3D11Device& GraphicsDevice,
+        const Level& GameLevel,
+        const Camera2D& Camera);
     void RenderLighting(D3D11Device& GraphicsDevice, const Level& GameLevel);
     void CompositeScene(D3D11Device& GraphicsDevice, bool bUseLighting);
 

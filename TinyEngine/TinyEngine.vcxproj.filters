@@ -108,6 +108,9 @@
     <ClCompile Include="Renderer\d3d11_gpu_profiler.cpp">
       <Filter>Source Files\Renderer</Filter>
     </ClCompile>
+    <ClCompile Include="Renderer\camera2d.cpp">
+      <Filter>Source Files\Renderer</Filter>
+    </ClCompile>
     <ClCompile Include="Renderer\fullscreen_pass.cpp">
       <Filter>Source Files\Renderer</Filter>
     </ClCompile>
@@ -183,6 +186,9 @@
       <Filter>Header Files\Renderer</Filter>
     </ClInclude>
     <ClInclude Include="Renderer\d3d11_gpu_profiler.h">
+      <Filter>Header Files\Renderer</Filter>
+    </ClInclude>
+    <ClInclude Include="Renderer\camera2d.h">
       <Filter>Header Files\Renderer</Filter>
     </ClInclude>
     <ClInclude Include="Renderer\fullscreen_pass.h">

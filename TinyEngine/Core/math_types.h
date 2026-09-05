@@ -1,4 +1,4 @@
-﻿#pragma once
+#pragma once
 
 #include "types.h"
 
@@ -15,6 +15,14 @@ struct Vec2
         return X * X + Y * Y;
     }
 };
+
+// NOTE(ljh): TinyEngine은 행 벡터와 행 우선 저장 규칙을 사용한다.
+struct Mat4
+{
+    float M[4][4] = {};
+};
+
+static_assert(sizeof(Mat4) == sizeof(float) * 16);
 
 struct AABB
 {

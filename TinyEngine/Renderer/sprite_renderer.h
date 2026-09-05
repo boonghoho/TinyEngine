@@ -1,6 +1,7 @@
 ﻿#pragma once
 
 #include "../Core/types.h"
+#include "camera2d.h"
 
 #include <d3d11.h>
 #include <wrl/client.h>
@@ -51,7 +52,7 @@ public:
 
     bool Initialize(ID3D11Device* Device, int SceneWidth, int SceneHeight);
 
-    void Begin(ID3D11DeviceContext* DeviceContext);
+    void Begin(ID3D11DeviceContext* DeviceContext, const Camera2D& Camera);
 
     void End();
 
@@ -75,6 +76,15 @@ private:
         float Color[4];
     };
 
+    struct CameraConstants
+    {
+        Mat4 WorldToClip;
+    };
+
+    static_assert(sizeof(CameraConstants) == 64);
+
+    bool UpdateCameraConstants(ID3D11DeviceContext* DeviceContext, const Camera2D& Camera);
+
     int SceneWidth = 0;
     int SceneHeight = 0;
 
@@ -85,6 +95,7 @@ private:
     Microsoft::WRL::ComPtr<ID3D11VertexShader> VertexShader;
     Microsoft::WRL::ComPtr<ID3D11PixelShader> PixelShader;
     Microsoft::WRL::ComPtr<ID3D11InputLayout> InputLayout;
+    Microsoft::WRL::ComPtr<ID3D11Buffer> CameraConstantBuffer;
     Microsoft::WRL::ComPtr<ID3D11Buffer> VertexBuffer;
     Microsoft::WRL::ComPtr<ID3D11Buffer> IndexBuffer;
     Microsoft::WRL::ComPtr<ID3D11SamplerState> PointClampSamplerState;

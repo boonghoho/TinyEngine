@@ -1,5 +1,6 @@
 #include "render_pipeline.h"
 
+#include "camera2d.h"
 #include "d3d11_device.h"
 #include "../Level/level.h"
 
@@ -71,7 +72,10 @@ void RenderPipeline::Release()
     Height = 0;
 }
 
-void RenderPipeline::RenderFrame(D3D11Device& GraphicsDevice, const Level& GameLevel)
+void RenderPipeline::RenderFrame(
+    D3D11Device& GraphicsDevice,
+    const Level& GameLevel,
+    const Camera2D& Camera)
 {
     ID3D11DeviceContext* DeviceContext = GraphicsDevice.GetContext();
     const bool bUseRadianceCascades = IsRadianceCascadesEnabled();
@@ -81,7 +85,7 @@ void RenderPipeline::RenderFrame(D3D11Device& GraphicsDevice, const Level& GameL
     // NOTE(ljh): 1. 조명의 영향을 받기 전 sprite/tile 원본 색상을 그린다.
     GpuProfiler.BeginPass(DeviceContext, GpuPass::Sprites);
     GraphicsDevice.BeginGpuEvent(L"RenderSprites");
-    RenderSprites(GraphicsDevice, GameLevel);
+    RenderSprites(GraphicsDevice, GameLevel, Camera);
     GraphicsDevice.EndGpuEvent();
     GpuProfiler.EndPass(DeviceContext, GpuPass::Sprites);
 
@@ -105,7 +109,10 @@ void RenderPipeline::RenderFrame(D3D11Device& GraphicsDevice, const Level& GameL
     GpuProfiler.EndFrame(DeviceContext);
 }
 
-void RenderPipeline::RenderSprites(D3D11Device& GraphicsDevice, const Level& GameLevel)
+void RenderPipeline::RenderSprites(
+    D3D11Device& GraphicsDevice,
+    const Level& GameLevel,
+    const Camera2D& Camera)
 {
     const float ClearColor[4] = {0.0f, 0.0f, 0.0f, 0.0f};
 
@@ -115,7 +122,7 @@ void RenderPipeline::RenderSprites(D3D11Device& GraphicsDevice, const Level& Gam
         SpriteColorTexture.GetHeight());
     GraphicsDevice.ClearRenderTarget(SpriteColorTexture.GetRenderTargetView(), ClearColor);
 
-    SpriteRenderer.Begin(GraphicsDevice.GetContext());
+    SpriteRenderer.Begin(GraphicsDevice.GetContext(), Camera);
     GameLevel.RenderTileMap(SpriteRenderer);
 
     for (const Entity& CurrentEntity : GameLevel.GetEntities())

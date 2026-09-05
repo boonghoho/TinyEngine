@@ -1,4 +1,4 @@
-﻿#include "sprite_renderer.h"
+#include "sprite_renderer.h"
 
 #include "shader.h"
 
@@ -22,6 +22,7 @@ bool SpriteRenderer::Initialize(ID3D11Device* Device, int InSceneWidth, int InSc
     VertexShader.Reset();
     PixelShader.Reset();
     InputLayout.Reset();
+    CameraConstantBuffer.Reset();
     VertexBuffer.Reset();
     IndexBuffer.Reset();
     PointClampSamplerState.Reset();
@@ -90,6 +91,20 @@ bool SpriteRenderer::Initialize(ID3D11Device* Device, int InSceneWidth, int InSc
     if (FAILED(Result))
     {
         std::printf("CreateInputLayout(SpriteRenderer) failed: 0x%08X\n", Result);
+        return false;
+    }
+
+    D3D11_BUFFER_DESC CameraBufferDesc = {};
+    CameraBufferDesc.ByteWidth = sizeof(CameraConstants);
+    CameraBufferDesc.Usage = D3D11_USAGE_DYNAMIC;
+    CameraBufferDesc.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
+    CameraBufferDesc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
+
+    Result = Device->CreateBuffer(&CameraBufferDesc, nullptr, CameraConstantBuffer.GetAddressOf());
+
+    if (FAILED(Result))
+    {
+        std::printf("CreateBuffer(SpriteRenderer CameraConstants) failed: 0x%08X\n", Result);
         return false;
     }
 
@@ -218,9 +233,14 @@ bool SpriteRenderer::Initialize(ID3D11Device* Device, int InSceneWidth, int InSc
     return true;
 }
 
-void SpriteRenderer::Begin(ID3D11DeviceContext* DeviceContext)
+void SpriteRenderer::Begin(ID3D11DeviceContext* DeviceContext, const Camera2D& Camera)
 {
     if (bIsDrawing || !DeviceContext)
+    {
+        return;
+    }
+
+    if (!UpdateCameraConstants(DeviceContext, Camera))
     {
         return;
     }
@@ -265,6 +285,9 @@ void SpriteRenderer::End()
     DeviceContext->PSSetShader(PixelShader.Get(), nullptr, 0);
     DeviceContext->PSSetSamplers(0, 1, &SamplerState);
 
+    ID3D11Buffer* CameraBuffer = CameraConstantBuffer.Get();
+    DeviceContext->VSSetConstantBuffers(0, 1, &CameraBuffer);
+
     std::size_t CommandStart = 0;
 
     while (CommandStart < DrawCommands.size())
@@ -292,10 +315,10 @@ void SpriteRenderer::End()
         {
             const SpriteDrawCommand& Command = DrawCommands[CommandStart + CommandIndex];
 
-            const float Left = Command.X / static_cast<float>(SceneWidth) * 2.0f - 1.0f;
-            const float Right = (Command.X + Command.Width) / static_cast<float>(SceneWidth) * 2.0f - 1.0f;
-            const float Top = 1.0f - Command.Y / static_cast<float>(SceneHeight) * 2.0f;
-            const float Bottom = 1.0f - (Command.Y + Command.Height) / static_cast<float>(SceneHeight) * 2.0f;
+            const float Left = Command.X;
+            const float Right = Command.X + Command.Width;
+            const float Top = Command.Y;
+            const float Bottom = Command.Y + Command.Height;
             const std::size_t VertexStart = CommandIndex * 4;
 
             Vertices[VertexStart + 0] = {
@@ -350,6 +373,38 @@ void SpriteRenderer::End()
     DrawCommands.clear();
     CurrentDeviceContext = nullptr;
     bIsDrawing = false;
+}
+
+bool SpriteRenderer::UpdateCameraConstants(ID3D11DeviceContext* DeviceContext, const Camera2D& Camera)
+{
+    if (!DeviceContext || !CameraConstantBuffer ||
+        Camera.Zoom <= 0.0f ||
+        Camera.ViewportWidth <= 0.0f ||
+        Camera.ViewportHeight <= 0.0f)
+    {
+        return false;
+    }
+
+    D3D11_MAPPED_SUBRESOURCE MappedResource = {};
+    const HRESULT Result = DeviceContext->Map(
+        CameraConstantBuffer.Get(),
+        0,
+        D3D11_MAP_WRITE_DISCARD,
+        0,
+        &MappedResource);
+
+    if (FAILED(Result))
+    {
+        std::printf("Map(SpriteRenderer CameraConstants) failed: 0x%08X\n", Result);
+        return false;
+    }
+
+    CameraConstants* Constants = static_cast<CameraConstants*>(MappedResource.pData);
+    *Constants = {};
+    Constants->WorldToClip = Camera.BuildWorldToClip();
+
+    DeviceContext->Unmap(CameraConstantBuffer.Get(), 0);
+    return true;
 }
 
 void SpriteRenderer::Draw(

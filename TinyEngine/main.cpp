@@ -14,6 +14,7 @@
 #include "Input/input.h"
 #include "Level/level.h"
 #include "Memory/memory_arena.h"
+#include "Renderer/camera2d.h"
 #include "Renderer/d3d11_device.h"
 #include "Renderer/render_pipeline.h"
 #include "Renderer/texture2d.h"
@@ -155,7 +156,12 @@ int RunEngine(SDL_Window* Window, HWND WindowHandle)
         return 1;
     }
 
-    // NOTE(ljh): 현재는 내가 예전에 만든 Magicat 이미지를 사용한다.
+    tiny::Camera2D GameCamera;
+    GameCamera.Position = {static_cast<tiny::f32>(WindowWidth) * 0.5f, static_cast<tiny::f32>(WindowHeight) * 0.5f};
+    GameCamera.ViewportWidth = static_cast<tiny::f32>(WindowWidth);
+    GameCamera.ViewportHeight = static_cast<tiny::f32>(WindowHeight);
+
+    // NOTE(ljh): 현재는 내가 예전에 만든 Magicat 이미지를 임시로 사용한다.
     tiny::Texture2D MagicatTexture;
 
     if (!MagicatTexture.LoadFromFile(GraphicsDevice.GetDevice(), "Assets/magicat.png"))
@@ -279,6 +285,11 @@ int RunEngine(SDL_Window* Window, HWND WindowHandle)
         ImGui::Text("FPS: %.1f / %.0f", CurrentFps, TargetFps);
         ImGui::Text("Frame: %.2f ms / %.2f ms", FrameTimeMilliseconds, FrameDelayMilliseconds);
 
+        ImGui::SeparatorText("Camera2D MVP");
+        ImGui::DragFloat("Camera X", &GameCamera.Position.X, 1.0f);
+        ImGui::DragFloat("Camera Y", &GameCamera.Position.Y, 1.0f);
+        ImGui::DragFloat("Zoom", &GameCamera.Zoom, 0.01f, 0.1f, 8.0f);
+
         bool bEnableRadianceCascades = RenderPipeline.IsRadianceCascadesEnabled();
         if (ImGui::Checkbox("Radiance Cascades", &bEnableRadianceCascades))
         {
@@ -341,7 +352,7 @@ int RunEngine(SDL_Window* Window, HWND WindowHandle)
         ImGui::End();
 
         GraphicsDevice.BeginFrame(ClearColor);
-        RenderPipeline.RenderFrame(GraphicsDevice, GameLevel);
+        RenderPipeline.RenderFrame(GraphicsDevice, GameLevel, GameCamera);
 
         EditorGui.EndFrame();
         GraphicsDevice.Present();
