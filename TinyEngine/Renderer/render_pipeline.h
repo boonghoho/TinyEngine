@@ -48,9 +48,23 @@ private:
     void RenderSprites(
         D3D11Device& GraphicsDevice,
         const Level& GameLevel,
-        const Camera2D& Camera);
-    void RenderLighting(D3D11Device& GraphicsDevice, const Level& GameLevel);
+        ID3D11Buffer* CameraConstantBuffer);
+    void RenderLighting(
+        D3D11Device& GraphicsDevice,
+        const Level& GameLevel,
+        ID3D11Buffer* CameraConstantBuffer);
     void CompositeScene(D3D11Device& GraphicsDevice, bool bUseLighting);
+    bool UpdateCameraConstants(ID3D11DeviceContext* DeviceContext, const Camera2D& Camera);
+
+    struct CameraConstants
+    {
+        Mat4 WorldToClip;
+        float ViewportSize[2];
+        float Zoom;
+        float Padding;
+    };
+
+    static_assert(sizeof(CameraConstants) == 80);
 
     int Width = 0;
     int Height = 0;
@@ -63,6 +77,8 @@ private:
     D3D11GpuProfiler GpuProfiler;
 
     LightingMode CurrentLightingMode = LightingMode::RadianceCascades;
+
+    Microsoft::WRL::ComPtr<ID3D11Buffer> CameraConstantBuffer;
 };
 
 }

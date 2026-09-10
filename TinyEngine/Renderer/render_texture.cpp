@@ -90,14 +90,4 @@ void RenderTexture::Release()
     Height = 0;
 }
 
-ID3D11RenderTargetView* RenderTexture::GetRenderTargetView() const
-{
-    return RenderTargetView.Get();
-}
-
-ID3D11ShaderResourceView* RenderTexture::GetShaderResourceView() const
-{
-    return ShaderResourceView.Get();
-}
-
 }

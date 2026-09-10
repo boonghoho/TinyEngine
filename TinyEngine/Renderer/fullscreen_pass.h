@@ -1,4 +1,4 @@
-﻿#pragma once
+#pragma once
 
 #include <d3d11.h>
 #include <wrl/client.h>
@@ -40,8 +40,8 @@ private:
     struct FrameConstants
     {
         float Resolution[2];
-        float Param0;
-        float Param1;
+        float Exposure;
+        float UseLighting;
     };
 
     Microsoft::WRL::ComPtr<ID3D11VertexShader> VertexShader;

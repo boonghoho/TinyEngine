@@ -319,8 +319,7 @@ void Level::RenderTileMap(SpriteRenderer& Renderer) const
             for (i32 TileX = 0; TileX < MapWidth; ++TileX)
             {
                 // NOTE(ljh): 2D tile 좌표를 row-major 1D 배열 index로 변환한다.
-                const std::size_t TileIndex =
-                    static_cast<std::size_t>(TileY * MapWidth + TileX);
+                const std::size_t TileIndex = static_cast<std::size_t>(TileY * MapWidth + TileX);
                 const u32 GID = CurrentLayer.TileGIDs[TileIndex];
 
                 // NOTE(ljh): Tiled에서 GID 0은 빈 tile을 의미한다.

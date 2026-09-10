@@ -1,4 +1,4 @@
-﻿#include "fullscreen_pass.h"
+#include "fullscreen_pass.h"
 
 #include "shader.h"
 
@@ -135,8 +135,8 @@ void FullscreenPass::Render(
     FrameConstants Constants = {};
     Constants.Resolution[0] = Width;
     Constants.Resolution[1] = Height;
-    Constants.Param0 = Param0;
-    Constants.Param1 = Param1;
+    Constants.Exposure = Param0;
+    Constants.UseLighting = Param1;
 
     DeviceContext->UpdateSubresource(
         FrameConstantBuffer.Get(),

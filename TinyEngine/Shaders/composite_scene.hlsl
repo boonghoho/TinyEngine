@@ -1,8 +1,8 @@
 cbuffer FrameConstants : register(b0)
 {
     float2 Resolution;
-    float Param0;
-    float Param1;
+    float Exposure;
+    float UseLighting;
 };
 
 Texture2D SpriteColorTexture : register(t0);
@@ -11,12 +11,12 @@ SamplerState SceneSampler : register(s0);
 
 float GetExposure()
 {
-    return max(Param0, 0.001);
+    return max(Exposure, 0.001);
 }
 
 bool ShouldUseLighting()
 {
-    return Param1 > 0.5;
+    return UseLighting> 0.5;
 }
 
 struct VSOutput

@@ -1,4 +1,4 @@
-﻿#pragma once
+#pragma once
 
 #include "../Core/types.h"
 #include "camera2d.h"
@@ -52,7 +52,8 @@ public:
 
     bool Initialize(ID3D11Device* Device, int SceneWidth, int SceneHeight);
 
-    void Begin(ID3D11DeviceContext* DeviceContext, const Camera2D& Camera);
+    // NOTE(ljh): Camera constant buffer의 수명과 갱신은 RenderPipeline이 관리한다.
+    void Begin(ID3D11DeviceContext* DeviceContext, ID3D11Buffer* CameraConstantBuffer);
 
     void End();
 
@@ -76,26 +77,17 @@ private:
         float Color[4];
     };
 
-    struct CameraConstants
-    {
-        Mat4 WorldToClip;
-    };
-
-    static_assert(sizeof(CameraConstants) == 64);
-
-    bool UpdateCameraConstants(ID3D11DeviceContext* DeviceContext, const Camera2D& Camera);
-
     int SceneWidth = 0;
     int SceneHeight = 0;
 
     std::vector<SpriteDrawCommand> DrawCommands;
     ID3D11DeviceContext* CurrentDeviceContext = nullptr;
+    ID3D11Buffer* CurrentCameraConstantBuffer = nullptr;
     bool bIsDrawing = false;
 
     Microsoft::WRL::ComPtr<ID3D11VertexShader> VertexShader;
     Microsoft::WRL::ComPtr<ID3D11PixelShader> PixelShader;
     Microsoft::WRL::ComPtr<ID3D11InputLayout> InputLayout;
-    Microsoft::WRL::ComPtr<ID3D11Buffer> CameraConstantBuffer;
     Microsoft::WRL::ComPtr<ID3D11Buffer> VertexBuffer;
     Microsoft::WRL::ComPtr<ID3D11Buffer> IndexBuffer;
     Microsoft::WRL::ComPtr<ID3D11SamplerState> PointClampSamplerState;

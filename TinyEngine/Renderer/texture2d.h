@@ -3,6 +3,7 @@
 #include <d3d11.h>
 #include <wrl/client.h>
 
+// NOTE(ljh): GPU가 읽을 수 있는 2D Texture를 관리한다. (ex. PNG 파일을 읽어 GPU에 올린 Texture, 외부 에셋)
 namespace tiny
 {
 

@@ -5,6 +5,15 @@ cbuffer FrameConstants : register(b0)
     float ScenePrimitiveCountFloat;
 };
 
+// NOTE(ljh): Sprite와 같은 frame의 camera data. FullscreenPass가 b0를 사용하므로 b1에 둔다.
+cbuffer CameraConstants : register(b1)
+{
+    row_major float4x4 WorldToClip;
+    float2 ViewportSize;
+    float Zoom;
+    float Padding;
+};
+
 struct ScenePrimitive
 {
     float4 Shape;
@@ -72,6 +81,19 @@ float2 GetIntervalRangePixels(int CascadeIndex)
     const float BaseIntervalLengthPixels = 8.0;
 
     return BaseIntervalLengthPixels * float2(IntervalScale(CascadeIndex), IntervalScale(CascadeIndex + 1));
+}
+
+float2 ScreenPixelToWorld(float2 ScreenPixel)
+{
+    float2 ClipPosition = float2(
+        ScreenPixel.x / ViewportSize.x * 2.0 - 1.0,
+        1.0 - ScreenPixel.y / ViewportSize.y * 2.0
+    );
+
+    return float2(
+        (ClipPosition.x - WorldToClip[3][0]) / WorldToClip[0][0],
+        (ClipPosition.y - WorldToClip[3][1]) / WorldToClip[1][1]
+    );
 }
 
 float IntersectCircle(
@@ -170,14 +192,14 @@ float IntersectAabb(
     return HitDistance;
 }
 
-float4 CastInterval(float2 ProbeCenterPixels, float2 Direction, float2 IntervalRangePixels)
+float4 CastInterval(float2 ProbeCenterWorld, float2 Direction, float2 IntervalRangeWorld)
 {
     uint PrimitiveCapacity = 0;
     uint PrimitiveStride = 0;
     ScenePrimitives.GetDimensions(PrimitiveCapacity, PrimitiveStride);
     uint PrimitiveCount = min((uint) (ScenePrimitiveCountFloat + 0.5), PrimitiveCapacity);
 
-    float ClosestDistance = IntervalRangePixels.y + 1.0;
+    float ClosestDistance = IntervalRangeWorld.y + 1.0;
     float3 ClosestRadiance = float3(0.0, 0.0, 0.0);
     bool HitAnything = false;
 
@@ -192,21 +214,21 @@ float4 CastInterval(float2 ProbeCenterPixels, float2 Direction, float2 IntervalR
         if (IsLight)
         {
             HitDistance = IntersectCircle(
-                ProbeCenterPixels,
+                ProbeCenterWorld,
                 Direction,
                 Primitive.Shape.xy,
                 Primitive.Shape.z,
-                IntervalRangePixels
+                IntervalRangeWorld
             );
         }
         else
         {
             HitDistance = IntersectAabb(
-                ProbeCenterPixels,
+                ProbeCenterWorld,
                 Direction,
                 Primitive.Shape.xy,
                 Primitive.Shape.zw,
-                IntervalRangePixels
+                IntervalRangeWorld
             );
         }
 
@@ -238,7 +260,9 @@ float4 PSMain(VSOutput Input) : SV_TARGET
 
     float ProbeSpacingPixels = GetProbeSpacingPixels(CascadeIndex);
     float2 ProbeCenterPixels = ((float2) ProbeCoord + 0.5) * ProbeSpacingPixels;
+    float2 ProbeCenterWorld = ScreenPixelToWorld(ProbeCenterPixels);
     float2 IntervalRangePixels = GetIntervalRangePixels(CascadeIndex);
+    float2 IntervalRangeWorld = IntervalRangePixels / Zoom;
 
-    return CastInterval(ProbeCenterPixels, Direction, IntervalRangePixels);
+    return CastInterval(ProbeCenterWorld, Direction, IntervalRangeWorld);
 }

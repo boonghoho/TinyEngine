@@ -29,7 +29,10 @@ public:
     bool Initialize(ID3D11Device* Device, int SceneWidth, int SceneHeight);
     void Release();
 
-    void GenerateLighting(D3D11Device& GraphicsDevice, const Level& GameLevel);
+    void GenerateLighting(
+        D3D11Device& GraphicsDevice,
+        const Level& GameLevel,
+        ID3D11Buffer* CameraConstantBuffer);
 
     void ResolveLighting(
         ID3D11DeviceContext* DeviceContext,

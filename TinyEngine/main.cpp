@@ -29,6 +29,7 @@ constexpr tiny::i32 WindowHeight = 720;
 constexpr tiny::f32 TargetFps = 144.0f;
 constexpr tiny::f32 FrameDelayMilliseconds = 1000.0f / TargetFps;
 
+// NOTE(ljh): RC demo를 위해 임의로 만든 Bouncing Light 설정 구조체와 관련 함수들
 namespace
 {
 

@@ -111,9 +111,21 @@ void RadianceCascadeRenderer::Release()
     SceneHeight = 0;
 }
 
-void RadianceCascadeRenderer::GenerateLighting(D3D11Device& GraphicsDevice, const Level& GameLevel)
+void RadianceCascadeRenderer::GenerateLighting(
+    D3D11Device& GraphicsDevice,
+    const Level& GameLevel,
+    ID3D11Buffer* CameraConstantBuffer)
 {
+    if (!CameraConstantBuffer)
+    {
+        return;
+    }
+
     const float ClearColor[4] = {0.0f, 0.0f, 0.0f, 1.0f};
+    ID3D11Buffer* CameraConstantBuffers[] = {CameraConstantBuffer};
+
+    // NOTE(ljh): FullscreenPass의 frame constants(b0)와 충돌하지 않도록 camera는 b1에 둔다.
+    GraphicsDevice.GetContext()->PSSetConstantBuffers(1, 1, CameraConstantBuffers);
 
     // NOTE(ljh): 움직이는 light도 매 frame 반영되도록 collider와 Light2D를 GPU structured buffer에 다시 올린다.
     const u32 ScenePrimitiveCount = UploadScenePrimitives(GraphicsDevice.GetContext(), GameLevel);
