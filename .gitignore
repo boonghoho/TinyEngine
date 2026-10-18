@@ -2,6 +2,8 @@
 .vs/
 x64/
 Dist/
+/Tests/
+/work/logging-20261018/
 Docs/
 AGENTS.md
 agents.md

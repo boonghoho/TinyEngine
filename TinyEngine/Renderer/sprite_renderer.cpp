@@ -1,11 +1,12 @@
 #include "sprite_renderer.h"
 
+#include "../Core/log.h"
+
 #include "shader.h"
 
 #include <algorithm>
 #include <cstddef>
 #include <cstdint>
-#include <cstdio>
 
 namespace tiny
 {
@@ -50,7 +51,7 @@ bool SpriteRenderer::Initialize(ID3D11Device* Device, int InSceneWidth, int InSc
 
     if (FAILED(Result))
     {
-        std::printf("CreateVertexShader(SpriteRenderer) failed: 0x%08X\n", Result);
+        TE_LOG_ERROR("Render", "CreateVertexShader(SpriteRenderer) failed: 0x%08X\n", Result);
         return false;
     }
 
@@ -62,7 +63,7 @@ bool SpriteRenderer::Initialize(ID3D11Device* Device, int InSceneWidth, int InSc
 
     if (FAILED(Result))
     {
-        std::printf("CreatePixelShader(SpriteRenderer) failed: 0x%08X\n", Result);
+        TE_LOG_ERROR("Render", "CreatePixelShader(SpriteRenderer) failed: 0x%08X\n", Result);
         return false;
     }
 
@@ -82,7 +83,7 @@ bool SpriteRenderer::Initialize(ID3D11Device* Device, int InSceneWidth, int InSc
 
     if (FAILED(Result))
     {
-        std::printf("CreateInputLayout(SpriteRenderer) failed: 0x%08X\n", Result);
+        TE_LOG_ERROR("Render", "CreateInputLayout(SpriteRenderer) failed: 0x%08X\n", Result);
         return false;
     }
 
@@ -99,7 +100,7 @@ bool SpriteRenderer::Initialize(ID3D11Device* Device, int InSceneWidth, int InSc
 
     if (FAILED(Result))
     {
-        std::printf("CreateBuffer(SpriteRenderer VertexBuffer) failed: 0x%08X\n", Result);
+        TE_LOG_ERROR("Render", "CreateBuffer(SpriteRenderer VertexBuffer) failed: 0x%08X\n", Result);
         return false;
     }
 
@@ -133,7 +134,7 @@ bool SpriteRenderer::Initialize(ID3D11Device* Device, int InSceneWidth, int InSc
 
     if (FAILED(Result))
     {
-        std::printf("CreateBuffer(SpriteRenderer IndexBuffer) failed: 0x%08X\n", Result);
+        TE_LOG_ERROR("Render", "CreateBuffer(SpriteRenderer IndexBuffer) failed: 0x%08X\n", Result);
         return false;
     }
 
@@ -152,7 +153,7 @@ bool SpriteRenderer::Initialize(ID3D11Device* Device, int InSceneWidth, int InSc
 
     if (FAILED(Result))
     {
-        std::printf("CreateSamplerState(SpriteRenderer) failed: 0x%08X\n", Result);
+        TE_LOG_ERROR("Render", "CreateSamplerState(SpriteRenderer) failed: 0x%08X\n", Result);
         return false;
     }
 
@@ -170,7 +171,7 @@ bool SpriteRenderer::Initialize(ID3D11Device* Device, int InSceneWidth, int InSc
 
     if (FAILED(Result))
     {
-        std::printf("CreateBlendState(SpriteRenderer) failed: 0x%08X\n", Result);
+        TE_LOG_ERROR("Render", "CreateBlendState(SpriteRenderer) failed: 0x%08X\n", Result);
         return false;
     }
 
@@ -186,7 +187,7 @@ bool SpriteRenderer::Initialize(ID3D11Device* Device, int InSceneWidth, int InSc
 
     if (FAILED(Result))
     {
-        std::printf("CreateDepthStencilState(SpriteRenderer) failed: 0x%08X\n", Result);
+        TE_LOG_ERROR("Render", "CreateDepthStencilState(SpriteRenderer) failed: 0x%08X\n", Result);
         return false;
     }
 
@@ -201,7 +202,7 @@ bool SpriteRenderer::Initialize(ID3D11Device* Device, int InSceneWidth, int InSc
 
     if (FAILED(Result))
     {
-        std::printf("CreateRasterizerState(SpriteRenderer) failed: 0x%08X\n", Result);
+        TE_LOG_ERROR("Render", "CreateRasterizerState(SpriteRenderer) failed: 0x%08X\n", Result);
         return false;
     }
 
@@ -282,7 +283,7 @@ void SpriteRenderer::End()
 
         if (FAILED(Result))
         {
-            std::printf("Map(SpriteRenderer VertexBuffer) failed: 0x%08X\n", Result);
+            TE_LOG_ERROR("Render", "Map(SpriteRenderer VertexBuffer) failed: 0x%08X\n", Result);
             break;
         }
 

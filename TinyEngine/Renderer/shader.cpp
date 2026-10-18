@@ -1,7 +1,8 @@
 #include "shader.h"
 
+#include "../Core/log.h"
+
 #include <d3dcompiler.h>
-#include <cstdio>
 
 #pragma comment(lib, "d3dcompiler.lib")
 
@@ -39,13 +40,20 @@ bool CompileShaderFromFile(
 
     if (ErrorBlob)
     {
-        std::printf("%s\n", static_cast<const char*>(ErrorBlob->GetBufferPointer()));
+        if (FAILED(Result))
+        {
+            TE_LOG_ERROR("Shader", "%s", static_cast<const char*>(ErrorBlob->GetBufferPointer()));
+        }
+        else
+        {
+            TE_LOG_WARNING("Shader", "%s", static_cast<const char*>(ErrorBlob->GetBufferPointer()));
+        }
         ErrorBlob->Release();
     }
 
     if (FAILED(Result))
     {
-        std::printf("D3DCompileFromFile failed for %s (%s): 0x%08X\n", EntryPoint, TargetProfile, Result);
+        TE_LOG_ERROR("Shader", "D3DCompileFromFile failed for %s (%s): 0x%08X\n", EntryPoint, TargetProfile, Result);
         return false;
     }
 

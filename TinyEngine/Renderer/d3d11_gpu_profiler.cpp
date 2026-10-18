@@ -1,7 +1,8 @@
 #include "d3d11_gpu_profiler.h"
 
+#include "../Core/log.h"
+
 #include <algorithm>
-#include <cstdio>
 
 namespace tiny
 {
@@ -162,7 +163,7 @@ bool D3D11GpuProfiler::InitializeFrameQueries(ID3D11Device* Device, FrameQueries
     HRESULT Result = Device->CreateQuery(&QueryDesc, Queries.Disjoint.ReleaseAndGetAddressOf());
     if (FAILED(Result))
     {
-        std::printf("CreateQuery(TimestampDisjoint) failed: 0x%08X\n", Result);
+        TE_LOG_WARNING("Profiler", "CreateQuery(TimestampDisjoint) failed: 0x%08X\n", Result);
         return false;
     }
 
@@ -173,14 +174,14 @@ bool D3D11GpuProfiler::InitializeFrameQueries(ID3D11Device* Device, FrameQueries
         Result = Device->CreateQuery(&QueryDesc, Pass.Start.ReleaseAndGetAddressOf());
         if (FAILED(Result))
         {
-            std::printf("CreateQuery(Timestamp Start) failed: 0x%08X\n", Result);
+            TE_LOG_WARNING("Profiler", "CreateQuery(Timestamp Start) failed: 0x%08X\n", Result);
             return false;
         }
 
         Result = Device->CreateQuery(&QueryDesc, Pass.End.ReleaseAndGetAddressOf());
         if (FAILED(Result))
         {
-            std::printf("CreateQuery(Timestamp End) failed: 0x%08X\n", Result);
+            TE_LOG_WARNING("Profiler", "CreateQuery(Timestamp End) failed: 0x%08X\n", Result);
             return false;
         }
     }
@@ -218,7 +219,7 @@ bool D3D11GpuProfiler::TryResolveFrame(ID3D11DeviceContext* DeviceContext, Frame
 
     if (FAILED(Result))
     {
-        std::printf("GetData(TimestampDisjoint) failed: 0x%08X\n", Result);
+        TE_LOG_WARNING("Profiler", "GetData(TimestampDisjoint) failed: 0x%08X\n", Result);
         Queries.bIsPending = false;
         return true;
     }
@@ -255,7 +256,7 @@ bool D3D11GpuProfiler::TryResolveFrame(ID3D11DeviceContext* DeviceContext, Frame
 
         if (FAILED(Result))
         {
-            std::printf("GetData(Timestamp Start) failed: 0x%08X\n", Result);
+            TE_LOG_WARNING("Profiler", "GetData(Timestamp Start) failed: 0x%08X\n", Result);
             Queries.bIsPending = false;
             return true;
         }
@@ -273,7 +274,7 @@ bool D3D11GpuProfiler::TryResolveFrame(ID3D11DeviceContext* DeviceContext, Frame
 
         if (FAILED(Result))
         {
-            std::printf("GetData(Timestamp End) failed: 0x%08X\n", Result);
+            TE_LOG_WARNING("Profiler", "GetData(Timestamp End) failed: 0x%08X\n", Result);
             Queries.bIsPending = false;
             return true;
         }

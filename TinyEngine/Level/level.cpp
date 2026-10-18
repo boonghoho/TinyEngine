@@ -1,9 +1,10 @@
 #include "level.h"
 
+#include "../Core/log.h"
+
 #include "../Renderer/sprite_renderer.h"
 #include "../../ThirdParty/nlohmann/json.hpp"
 
-#include <cstdio>
 #include <exception>
 #include <filesystem>
 #include <fstream>
@@ -44,7 +45,7 @@ bool Level::Initialize(ID3D11Device* Device, const char* MapFilePath)
     std::ifstream MapFile(MapFilePath);
     if (!MapFile)
     {
-        std::printf("Failed to open Tiled map: %s\n", MapFilePath);
+        TE_LOG_ERROR("Level", "Failed to open Tiled map: %s\n", MapFilePath);
         return false;
     }
 
@@ -62,7 +63,7 @@ bool Level::Initialize(ID3D11Device* Device, const char* MapFilePath)
             Tilesets.size() != 1 ||
             Layers.empty())
         {
-            std::printf("Unsupported Tiled map layout\n");
+            TE_LOG_ERROR("Level", "Unsupported Tiled map layout\n");
             return false;
         }
 
@@ -74,7 +75,7 @@ bool Level::Initialize(ID3D11Device* Device, const char* MapFilePath)
             Tileset.value("margin", 0) != 0 ||
             Tileset.value("spacing", 0) != 0)
         {
-            std::printf("Unsupported Tiled tileset\n");
+            TE_LOG_ERROR("Level", "Unsupported Tiled tileset\n");
             return false;
         }
 
@@ -112,7 +113,7 @@ bool Level::Initialize(ID3D11Device* Device, const char* MapFilePath)
                 CurrentLayer.at("width").get<i32>() != MapWidth ||
                 CurrentLayer.at("height").get<i32>() != MapHeight)
             {
-                std::printf("Invalid Tiled tile layer\n");
+                TE_LOG_ERROR("Level", "Invalid Tiled tile layer\n");
                 return false;
             }
 
@@ -123,7 +124,7 @@ bool Level::Initialize(ID3D11Device* Device, const char* MapFilePath)
 
             if (NewLayer.TileGIDs.size() != ExpectedTileCount)
             {
-                std::printf("Invalid Tiled tile layer dimensions\n");
+                TE_LOG_ERROR("Level", "Invalid Tiled tile layer dimensions\n");
                 return false;
             }
 
@@ -141,7 +142,7 @@ bool Level::Initialize(ID3D11Device* Device, const char* MapFilePath)
                     NewLayer.Light.Intensity < 0.0f ||
                     NewLayer.Light.Radius <= 0.0f)
                 {
-                    std::printf("Invalid Light2D tile layer properties\n");
+                    TE_LOG_ERROR("Level", "Invalid Light2D tile layer properties\n");
                     return false;
                 }
             }
@@ -151,7 +152,7 @@ bool Level::Initialize(ID3D11Device* Device, const char* MapFilePath)
 
         if (TileLayers.empty())
         {
-            std::printf("Tiled map has no tile layers\n");
+            TE_LOG_ERROR("Level", "Tiled map has no tile layers\n");
             return false;
         }
 
@@ -167,7 +168,7 @@ bool Level::Initialize(ID3D11Device* Device, const char* MapFilePath)
             const nlohmann::json& Objects = CurrentLayer.at("objects");
             if (!Objects.is_array())
             {
-                std::printf("Invalid Tiled object layer\n");
+                TE_LOG_ERROR("Level", "Invalid Tiled object layer\n");
                 return false;
             }
 
@@ -196,7 +197,7 @@ bool Level::Initialize(ID3D11Device* Device, const char* MapFilePath)
 
                 if (Width <= 0.0f || Height <= 0.0f || Rotation != 0.0f || bIsUnsupportedShape)
                 {
-                    std::printf("Unsupported Tiled Collider object\n");
+                    TE_LOG_ERROR("Level", "Unsupported Tiled Collider object\n");
                     return false;
                 }
 
@@ -215,7 +216,7 @@ bool Level::Initialize(ID3D11Device* Device, const char* MapFilePath)
             TilesetTileWidth <= 0 || TilesetTileHeight <= 0 ||
             TilesetImageWidth <= 0 || TilesetImageHeight <= 0)
         {
-            std::printf("Invalid Tiled map dimensions\n");
+            TE_LOG_ERROR("Level", "Invalid Tiled map dimensions\n");
             return false;
         }
 
@@ -231,7 +232,7 @@ bool Level::Initialize(ID3D11Device* Device, const char* MapFilePath)
                         (GID < FirstGID ||
                          GID - FirstGID >= static_cast<u32>(TilesetTileCount))))
                 {
-                    std::printf("Unsupported Tiled tile GID\n");
+                    TE_LOG_ERROR("Level", "Unsupported Tiled tile GID\n");
                     return false;
                 }
             }
@@ -247,7 +248,7 @@ bool Level::Initialize(ID3D11Device* Device, const char* MapFilePath)
             TilesetTexture.GetWidth() != TilesetImageWidth ||
             TilesetTexture.GetHeight() != TilesetImageHeight)
         {
-            std::printf("Failed to load Tiled tileset image: %s\n", ImagePathString.c_str());
+            TE_LOG_ERROR("Level", "Failed to load Tiled tileset image: %s\n", ImagePathString.c_str());
             return false;
         }
 
@@ -282,7 +283,7 @@ bool Level::Initialize(ID3D11Device* Device, const char* MapFilePath)
             }
         }
 
-        std::printf(
+        TE_LOG_INFO("Level",
             "Loaded Tiled map: %s (%dx%d tiles, %zu layers, %zu colliders, %zu lights)\n",
             MapFilePath,
             MapWidth,
@@ -295,7 +296,7 @@ bool Level::Initialize(ID3D11Device* Device, const char* MapFilePath)
     }
     catch (const std::exception& Error)
     {
-        std::printf("Failed to parse Tiled map: %s\n", Error.what());
+        TE_LOG_ERROR("Level", "Failed to parse Tiled map: %s\n", Error.what());
         TileLayers.clear();
         Colliders.clear();
         Entities.clear();

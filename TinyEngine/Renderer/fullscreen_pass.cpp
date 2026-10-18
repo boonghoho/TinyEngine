@@ -1,8 +1,8 @@
 #include "fullscreen_pass.h"
 
-#include "shader.h"
+#include "../Core/log.h"
 
-#include <cstdio>
+#include "shader.h"
 
 namespace tiny
 {
@@ -38,7 +38,7 @@ bool FullscreenPass::Initialize(ID3D11Device* Device, const wchar_t* ShaderPath)
 
     if (FAILED(Result))
     {
-        std::printf("CreateVertexShader failed: 0x%08X\n", Result);
+        TE_LOG_ERROR("Render", "CreateVertexShader failed: 0x%08X\n", Result);
         return false;
     }
 
@@ -51,7 +51,7 @@ bool FullscreenPass::Initialize(ID3D11Device* Device, const wchar_t* ShaderPath)
 
     if (FAILED(Result))
     {
-        std::printf("CreatePixelShader failed: 0x%08X\n", Result);
+        TE_LOG_ERROR("Render", "CreatePixelShader failed: 0x%08X\n", Result);
         Release();
         return false;
     }
@@ -69,7 +69,7 @@ bool FullscreenPass::Initialize(ID3D11Device* Device, const wchar_t* ShaderPath)
 
     if (FAILED(Result))
     {
-        std::printf("CreateBuffer(FrameConstantBuffer) failed: 0x%08X\n", Result);
+        TE_LOG_ERROR("Render", "CreateBuffer(FrameConstantBuffer) failed: 0x%08X\n", Result);
         Release();
         return false;
     }
@@ -90,7 +90,7 @@ bool FullscreenPass::Initialize(ID3D11Device* Device, const wchar_t* ShaderPath)
 
     if (FAILED(Result))
     {
-        std::printf("CreateSamplerState(PointClampSamplerState) failed: 0x%08X\n", Result);
+        TE_LOG_ERROR("Render", "CreateSamplerState(PointClampSamplerState) failed: 0x%08X\n", Result);
         Release();
         return false;
     }

@@ -1,11 +1,12 @@
 #include "radiance_cascade_renderer.h"
 
+#include "../Core/log.h"
+
 #include "d3d11_device.h"
 #include "../Level/level.h"
 
 #include <algorithm>
 #include <array>
-#include <cstdio>
 
 namespace tiny
 {
@@ -235,7 +236,7 @@ bool RadianceCascadeRenderer::InitializeScenePrimitiveBuffer(ID3D11Device* Devic
 
     if (FAILED(Result))
     {
-        std::printf("CreateBuffer(RC scene primitives) failed: 0x%08X\n", Result);
+        TE_LOG_ERROR("Render", "CreateBuffer(RC scene primitives) failed: 0x%08X\n", Result);
         return false;
     }
 
@@ -252,7 +253,7 @@ bool RadianceCascadeRenderer::InitializeScenePrimitiveBuffer(ID3D11Device* Devic
 
     if (FAILED(Result))
     {
-        std::printf("CreateShaderResourceView(RC scene primitives) failed: 0x%08X\n", Result);
+        TE_LOG_ERROR("Render", "CreateShaderResourceView(RC scene primitives) failed: 0x%08X\n", Result);
         return false;
     }
 
@@ -324,7 +325,7 @@ u32 RadianceCascadeRenderer::UploadScenePrimitives(ID3D11DeviceContext* DeviceCo
 
     if (FAILED(Result))
     {
-        std::printf("Map(RC scene primitives) failed: 0x%08X\n", Result);
+        TE_LOG_ERROR("Render", "Map(RC scene primitives) failed: 0x%08X\n", Result);
         return 0;
     }
 

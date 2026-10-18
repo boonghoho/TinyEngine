@@ -1,5 +1,7 @@
 #include "texture2d.h"
 
+#include "../Core/log.h"
+
 // NOTE(ljh): stb_image의 구현은 정확히 하나의 .cpp에서만 생성한다.
 #define STBI_ONLY_PNG
 #define STBI_WINDOWS_UTF8
@@ -7,7 +9,6 @@
 #include "../../ThirdParty/stb/stb_image.h"
 
 #include <cstddef>
-#include <cstdio>
 #include <limits>
 
 namespace tiny
@@ -38,8 +39,9 @@ bool Texture2D::LoadFromFile(ID3D11Device* Device, const char* FilePath)
 
     if (!Pixels || ImageWidth <= 0 || ImageHeight <= 0)
     {
-        std::printf(
-            "stbi_load(Texture2D) failed: %s\n", 
+        TE_LOG_ERROR("Asset",
+            "stbi_load(Texture2D) failed for '%s': %s\n",
+            FilePath,
             stbi_failure_reason() ? stbi_failure_reason() : "unknown error");
         stbi_image_free(Pixels);
         
@@ -54,7 +56,7 @@ bool Texture2D::LoadFromFile(ID3D11Device* Device, const char* FilePath)
     if (RowPitch > (std::numeric_limits<UINT>::max)() ||
         PixelByteCount > (std::numeric_limits<UINT>::max)())
     {
-        std::printf("Texture2D image is too large\n");
+        TE_LOG_ERROR("Asset", "Texture2D image is too large\n");
         stbi_image_free(Pixels);
         return false;
     }
@@ -82,7 +84,7 @@ bool Texture2D::LoadFromFile(ID3D11Device* Device, const char* FilePath)
 
     if (FAILED(Result))
     {
-        std::printf("CreateTexture2D(Texture2D) failed: 0x%08X\n", Result);
+        TE_LOG_ERROR("Asset", "CreateTexture2D(Texture2D) failed: 0x%08X\n", Result);
         return false;
     }
 
@@ -93,7 +95,7 @@ bool Texture2D::LoadFromFile(ID3D11Device* Device, const char* FilePath)
 
     if (FAILED(ShaderResourceViewResult))
     {
-        std::printf(
+        TE_LOG_ERROR("Asset",
             "CreateShaderResourceView(Texture2D) failed: 0x%08X\n",
             ShaderResourceViewResult);
         Texture.Reset();

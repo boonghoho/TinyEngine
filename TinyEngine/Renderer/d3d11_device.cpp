@@ -1,6 +1,6 @@
 #include "d3d11_device.h"
 
-#include <cstdio>
+#include "../Core/log.h"
 
 #pragma comment(lib, "d3d11.lib")
 
@@ -59,7 +59,7 @@ bool D3D11Device::Initialize(HWND WindowHandle, int InWidth, int InHeight)
 
     if (FAILED(Result))
     {
-        std::printf("D3D11CreateDeviceAndSwapChain failed: 0x%08X\n", Result);
+        TE_LOG_ERROR("Render", "D3D11CreateDeviceAndSwapChain failed: 0x%08X\n", Result);
         Release();
         return false;
     }
@@ -68,7 +68,7 @@ bool D3D11Device::Initialize(HWND WindowHandle, int InWidth, int InHeight)
 
     if (FAILED(AnnotationResult))
     {
-        std::printf("ID3DUserDefinedAnnotation failed: 0x%08X\n", AnnotationResult);
+        TE_LOG_WARNING("Render", "ID3DUserDefinedAnnotation failed: 0x%08X\n", AnnotationResult);
     }
 
     if (!CreateBackBufferRenderTarget())
@@ -150,7 +150,7 @@ bool D3D11Device::CreateBackBufferRenderTarget()
 
     if (FAILED(Result))
     {
-        std::printf("GetBuffer failed: 0x%08X\n", Result);
+        TE_LOG_ERROR("Render", "GetBuffer failed: 0x%08X\n", Result);
         return false;
     }
 
@@ -161,7 +161,7 @@ bool D3D11Device::CreateBackBufferRenderTarget()
 
     if (FAILED(Result))
     {
-        std::printf("CreateRenderTargetView failed: 0x%08X\n", Result);
+        TE_LOG_ERROR("Render", "CreateRenderTargetView failed: 0x%08X\n", Result);
         return false;
     }
 

@@ -8,6 +8,7 @@
 
 #include <imgui.h>
 
+#include "Core/log.h"
 #include "Core/types.h"
 #include "Editor/imgui_layer.h"
 #include "Game/player_controller.h"
@@ -20,7 +21,6 @@
 #include "Renderer/texture2d.h"
 
 #include <array>
-#include <cstdio>
 #include <filesystem>
 #include <string>
 
@@ -129,7 +129,7 @@ int RunEngine(SDL_Window* Window, HWND WindowHandle)
     const char* BasePath = SDL_GetBasePath();
     if (!BasePath)
     {
-        std::printf("SDL_GetBasePath failed: %s\n", SDL_GetError());
+        TE_LOG_ERROR("Core", "SDL_GetBasePath failed: %s\n", SDL_GetError());
         return 1;
     }
 
@@ -141,7 +141,7 @@ int RunEngine(SDL_Window* Window, HWND WindowHandle)
 
     if (WorkingDirectoryError)
     {
-        std::printf("Failed to set executable directory: %s\n", WorkingDirectoryError.message().c_str());
+        TE_LOG_ERROR("Core", "Failed to set executable directory: %s\n", WorkingDirectoryError.message().c_str());
         return 1;
     }
 
@@ -211,8 +211,11 @@ int RunEngine(SDL_Window* Window, HWND WindowHandle)
     tiny::ImGuiLayer EditorGui;
     if (!EditorGui.Initialize(Window, GraphicsDevice.GetDevice(), GraphicsDevice.GetContext()))
     {
+        TE_LOG_ERROR("Core", "Failed to initialize ImGui");
         return 1;
     }
+
+    TE_LOG_INFO("Core", "Lighting Demo ready (%dx%d)", WindowWidth, WindowHeight);
 
     bool bIsRunning = true;
     const Uint64 PerformanceFrequency = SDL_GetPerformanceFrequency();
@@ -370,16 +373,11 @@ int RunEngine(SDL_Window* Window, HWND WindowHandle)
     return 0;
 }
 
-int main(int Argc, char** Argv)
+int RunApplication()
 {
-    (void)Argc;
-    (void)Argv;
-
-    SDL_SetMainReady();
-
     if (!SDL_Init(SDL_INIT_VIDEO))
     {
-        std::printf("SDL_Init failed: %s\n", SDL_GetError());
+        TE_LOG_ERROR("Core", "SDL_Init failed: %s\n", SDL_GetError());
         return 1;
     }
 
@@ -391,7 +389,7 @@ int main(int Argc, char** Argv)
 
     if (Window == nullptr)
     {
-        std::printf("SDL_CreateWindow failed: %s\n", SDL_GetError());
+        TE_LOG_ERROR("Core", "SDL_CreateWindow failed: %s\n", SDL_GetError());
         SDL_Quit();
         return 1;
     }
@@ -402,7 +400,7 @@ int main(int Argc, char** Argv)
 
     if (WindowHandle == nullptr)
     {
-        std::printf("Failed to get HWND from SDL window\n");
+        TE_LOG_ERROR("Core", "Failed to get HWND from SDL window\n");
         SDL_DestroyWindow(Window);
         SDL_Quit();
         return 1;
@@ -413,5 +411,36 @@ int main(int Argc, char** Argv)
     SDL_DestroyWindow(Window);
     SDL_Quit();
 
+    return Result;
+}
+
+int main(int Argc, char** Argv)
+{
+    (void)Argc;
+    (void)Argv;
+
+    SDL_SetMainReady();
+
+    // SDL 초기화 오류도 기록할 수 있도록 로그 파일을 먼저 연다.
+    const char* BasePath = SDL_GetBasePath();
+    if (BasePath)
+    {
+        const std::u8string BasePathUtf8(reinterpret_cast<const char8_t*>(BasePath));
+        const std::filesystem::path LogPath = std::filesystem::path(BasePathUtf8) / "TinyEngine.log";
+        if (!tiny::InitializeLogging(LogPath))
+        {
+            TE_LOG_WARNING("Log", "Could not open TinyEngine.log; continuing with console/debugger output");
+        }
+    }
+    else
+    {
+        TE_LOG_WARNING("Log", "Could not locate log directory: %s", SDL_GetError());
+    }
+
+    TE_LOG_INFO("Core", "TinyEngine starting");
+    const int Result = RunApplication();
+    TE_LOG_INFO("Core", "TinyEngine stopped (exit code: %d)", Result);
+
+    tiny::ShutdownLogging();
     return Result;
 }

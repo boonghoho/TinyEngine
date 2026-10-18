@@ -1,5 +1,7 @@
 #include "render_pipeline.h"
 
+#include "../Core/log.h"
+
 #include "camera2d.h"
 #include "d3d11_device.h"
 #include "../Level/level.h"
@@ -65,7 +67,7 @@ bool RenderPipeline::Initialize(ID3D11Device* Device, int InWidth, int InHeight)
 
     if (FAILED(Result))
     {
-        std::printf("CreateBuffer(RenderPipeline CameraConstants) failed: 0x%08X\n", Result);
+        TE_LOG_ERROR("Render", "CreateBuffer(RenderPipeline CameraConstants) failed: 0x%08X\n", Result);
         Release();
         return false;
     }
@@ -235,7 +237,7 @@ bool RenderPipeline::UpdateCameraConstants(ID3D11DeviceContext* DeviceContext, c
 
     if (FAILED(Result))
     {
-        std::printf("Map(RenderPipeline CameraConstants) failed: 0x%08X\n", Result);
+        TE_LOG_ERROR("Render", "Map(RenderPipeline CameraConstants) failed: 0x%08X\n", Result);
         return false;
     }
 

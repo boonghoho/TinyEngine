@@ -1,6 +1,7 @@
 #include "render_texture.h"
 
-#include <cstdio>
+#include "../Core/log.h"
+
 
 namespace tiny
 {
@@ -35,7 +36,7 @@ bool RenderTexture::Initialize(ID3D11Device* Device, int InWidth, int InHeight)
 
     if (FAILED(Result))
     {
-        std::printf("CreateTexture2D(RenderTexture) failed: 0x%08X\n", Result);
+        TE_LOG_ERROR("Render", "CreateTexture2D(RenderTexture) failed: 0x%08X\n", Result);
         Release();
         return false;
     }
@@ -53,7 +54,7 @@ bool RenderTexture::Initialize(ID3D11Device* Device, int InWidth, int InHeight)
 
     if (FAILED(Result))
     {
-        std::printf("CreateRenderTargetView(RenderTexture) failed: 0x%08X\n", Result);
+        TE_LOG_ERROR("Render", "CreateRenderTargetView(RenderTexture) failed: 0x%08X\n", Result);
         Release();
         return false;
     }
@@ -72,7 +73,7 @@ bool RenderTexture::Initialize(ID3D11Device* Device, int InWidth, int InHeight)
 
     if (FAILED(Result))
     {
-        std::printf("CreateShaderResourceView(RenderTexture) failed: 0x%08X\n", Result);
+        TE_LOG_ERROR("Render", "CreateShaderResourceView(RenderTexture) failed: 0x%08X\n", Result);
         Release();
         return false;
     }
