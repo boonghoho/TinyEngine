@@ -1,6 +1,8 @@
 #pragma once
 
+#include <cstdarg>
 #include <filesystem>
+#include <string>
 
 namespace tiny
 {
@@ -17,6 +19,9 @@ bool InitializeLogging(const std::filesystem::path& FilePath);
 
 // 로그를 쓰는 스레드가 모두 종료된 뒤 호출한다.
 void ShutdownLogging();
+
+// 인자 목록을 복사해 사용하므로, 호출자가 받은 목록은 그대로 유지된다.
+std::string FormatLogMessage(const char* Format, va_list Arguments);
 
 // printf 형식으로 동기 기록하며, 전달받은 포인터는 저장하지 않는다.
 void WriteLog(

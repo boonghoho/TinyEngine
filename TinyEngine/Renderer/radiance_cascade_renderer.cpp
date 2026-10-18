@@ -1,5 +1,6 @@
 #include "radiance_cascade_renderer.h"
 
+#include "../Core/assert.h"
 #include "../Core/log.h"
 
 #include "d3d11_device.h"
@@ -352,6 +353,10 @@ ID3D11ShaderResourceView* RadianceCascadeRenderer::GetMergedShaderResourceView()
 
 int RadianceCascadeRenderer::GetCascadeTextureWidth(int CascadeIndex) const
 {
+    TE_ASSERT(
+        CascadeIndex >= 0 && CascadeIndex < CascadeCount,
+        "CascadeIndex: %d, CascadeCount: %d", CascadeIndex, CascadeCount);
+
     const int ProbeSpacingPixels = BaseProbeSpacingPixels << CascadeIndex;
     const int DirectionTileWidth = GetDirectionTileWidth(CascadeIndex);
 
@@ -360,6 +365,10 @@ int RadianceCascadeRenderer::GetCascadeTextureWidth(int CascadeIndex) const
 
 int RadianceCascadeRenderer::GetCascadeTextureHeight(int CascadeIndex) const
 {
+    TE_ASSERT(
+        CascadeIndex >= 0 && CascadeIndex < CascadeCount,
+        "CascadeIndex: %d, CascadeCount: %d", CascadeIndex, CascadeCount);
+
     const int ProbeSpacingPixels = BaseProbeSpacingPixels << CascadeIndex;
     const int DirectionTileHeight = GetDirectionTileHeight(CascadeIndex);
 

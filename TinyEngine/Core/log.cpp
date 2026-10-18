@@ -109,6 +109,30 @@ void ShutdownLogging()
     }
 }
 
+std::string FormatLogMessage(const char* Format, va_list Arguments)
+{
+    if (!Format)
+    {
+        return {};
+    }
+
+    va_list Copy;
+    va_copy(Copy, Arguments);
+    const int MessageLength = std::vsnprintf(nullptr, 0, Format, Copy);
+    va_end(Copy);
+
+    if (MessageLength < 0)
+    {
+        return "Failed to format message";
+    }
+
+    std::string Message(static_cast<std::size_t>(MessageLength), '\0');
+    va_copy(Copy, Arguments);
+    std::vsnprintf(Message.data(), Message.size() + 1, Format, Copy);
+    va_end(Copy);
+    return Message;
+}
+
 void WriteLog(
     LogLevel Level,
     const char* Category,
@@ -119,21 +143,7 @@ void WriteLog(
 {
     va_list Arguments;
     va_start(Arguments, Format);
-    va_list CountArguments;
-    va_copy(CountArguments, Arguments);
-    const int MessageLength = std::vsnprintf(nullptr, 0, Format, CountArguments);
-    va_end(CountArguments);
-
-    std::string Message;
-    if (MessageLength >= 0)
-    {
-        Message.resize(static_cast<std::size_t>(MessageLength));
-        std::vsnprintf(Message.data(), Message.size() + 1, Format, Arguments);
-    }
-    else
-    {
-        Message = "Failed to format log message";
-    }
+    std::string Message = FormatLogMessage(Format, Arguments);
     va_end(Arguments);
 
     while (!Message.empty() && (Message.back() == '\n' || Message.back() == '\r'))

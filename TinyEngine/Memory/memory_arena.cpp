@@ -1,5 +1,7 @@
 ﻿#include "memory_arena.h"
 
+#include "../Core/assert.h"
+
 #define WIN32_LEAN_AND_MEAN
 #define NOMINMAX
 
@@ -169,6 +171,8 @@ MemoryArena::Marker MemoryArena::GetMarker() const
 
 void MemoryArena::Rewind(Marker MarkerPosition)
 {
+    TE_ASSERT(MarkerPosition <= Position, "Marker: %zu, Position: %zu", MarkerPosition, Position);
+
     if (MarkerPosition <= Position)
     {
         Position = MarkerPosition;
