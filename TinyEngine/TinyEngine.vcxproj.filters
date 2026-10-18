@@ -25,7 +25,7 @@
     <Filter Include="Source Files\Game">
       <UniqueIdentifier>{2B4B7254-6EEB-4F55-A92F-F8C1108D8CF1}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Source Files\Editor">
+    <Filter Include="Source Files\UI">
       <UniqueIdentifier>{922C6995-BBCA-4C24-9BA5-5C7A3B198944}</UniqueIdentifier>
     </Filter>
     <Filter Include="Source Files\Level">
@@ -46,7 +46,7 @@
     <Filter Include="Header Files\Game">
       <UniqueIdentifier>{E60E0C66-C5BB-4C6F-944A-40C4CB5752BF}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Header Files\Editor">
+    <Filter Include="Header Files\UI">
       <UniqueIdentifier>{830C7AA4-F2C3-4BA7-BA6D-1281A780C615}</UniqueIdentifier>
     </Filter>
     <Filter Include="Header Files\Level">
@@ -66,6 +66,12 @@
     </Filter>
     <Filter Include="Shaders">
       <UniqueIdentifier>{65C94294-D320-4C69-87BA-B63560597729}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\Debug">
+      <UniqueIdentifier>{70BC070B-5883-40BA-BEF0-95EBC9540BE0}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\Debug">
+      <UniqueIdentifier>{76137140-27FD-45B6-B25C-55BD13D0D69D}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
@@ -93,8 +99,11 @@
     <ClCompile Include="Core\log.cpp">
       <Filter>Source Files\Core</Filter>
     </ClCompile>
-    <ClCompile Include="Editor\imgui_layer.cpp">
-      <Filter>Source Files\Editor</Filter>
+    <ClCompile Include="Debug\debug_ui.cpp">
+      <Filter>Source Files\Debug</Filter>
+    </ClCompile>
+    <ClCompile Include="UI\imgui_layer.cpp">
+      <Filter>Source Files\UI</Filter>
     </ClCompile>
     <ClCompile Include="Game\player_controller.cpp">
       <Filter>Source Files\Game</Filter>
@@ -161,6 +170,9 @@
     <ClInclude Include="Core\assert.h">
       <Filter>Header Files\Core</Filter>
     </ClInclude>
+    <ClInclude Include="Core\frame_timing.h">
+      <Filter>Header Files\Core</Filter>
+    </ClInclude>
     <ClInclude Include="Core\log.h">
       <Filter>Header Files\Core</Filter>
     </ClInclude>
@@ -170,8 +182,11 @@
     <ClInclude Include="Core\types.h">
       <Filter>Header Files\Core</Filter>
     </ClInclude>
-    <ClInclude Include="Editor\imgui_layer.h">
-      <Filter>Header Files\Editor</Filter>
+    <ClInclude Include="Debug\debug_ui.h">
+      <Filter>Header Files\Debug</Filter>
+    </ClInclude>
+    <ClInclude Include="UI\imgui_layer.h">
+      <Filter>Header Files\UI</Filter>
     </ClInclude>
     <ClInclude Include="Game\player_controller.h">
       <Filter>Header Files\Game</Filter>

@@ -33,8 +33,13 @@ bool ImGuiLayer::Initialize(
 
     ImGuiIO& Io = ImGui::GetIO();
     Io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;
+    Io.ConfigFlags |= ImGuiConfigFlags_ViewportsEnable;
 
     ImGui::StyleColorsDark();
+    ImGui::GetStyle().WindowRounding = 0.0f;
+    ImGui::GetStyle().Colors[ImGuiCol_WindowBg].w = 1.0f;
+    ImGui::GetStyle().Colors[ImGuiCol_MenuBarBg].w = 0.85f;
+    ImGui::GetStyle().Colors[ImGuiCol_PopupBg].w = 0.85f;
 
     if (!ImGui_ImplSDL3_InitForD3D(Window))
     {
@@ -71,12 +76,6 @@ void ImGuiLayer::BeginFrame()
     ImGui_ImplDX11_NewFrame();
     ImGui_ImplSDL3_NewFrame();
     ImGui::NewFrame();
-
-    ImGui::DockSpaceOverViewport(
-        0,
-        ImGui::GetMainViewport(),
-        ImGuiDockNodeFlags_PassthruCentralNode
-    );
 }
 
 void ImGuiLayer::EndFrame()
@@ -88,6 +87,12 @@ void ImGuiLayer::EndFrame()
 
     ImGui::Render();
     ImGui_ImplDX11_RenderDrawData(ImGui::GetDrawData());
+
+    if (ImGui::GetIO().ConfigFlags & ImGuiConfigFlags_ViewportsEnable)
+    {
+        ImGui::UpdatePlatformWindows();
+        ImGui::RenderPlatformWindowsDefault();
+    }
 }
 
 void ImGuiLayer::Release()

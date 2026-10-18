@@ -6,11 +6,10 @@
 #include <SDL3/SDL.h>
 #include <SDL3/SDL_main.h>
 
-#include <imgui.h>
-
+#include "Core/frame_timing.h"
 #include "Core/log.h"
 #include "Core/types.h"
-#include "Editor/imgui_layer.h"
+#include "Debug/debug_ui.h"
 #include "Game/player_controller.h"
 #include "Input/input.h"
 #include "Level/level.h"
@@ -19,6 +18,7 @@
 #include "Renderer/d3d11_device.h"
 #include "Renderer/render_pipeline.h"
 #include "Renderer/texture2d.h"
+#include "UI/imgui_layer.h"
 
 #include <array>
 #include <filesystem>
@@ -29,10 +29,15 @@ constexpr tiny::i32 WindowHeight = 720;
 constexpr tiny::f32 TargetFps = 144.0f;
 constexpr tiny::f32 FrameDelayMilliseconds = 1000.0f / TargetFps;
 
-// NOTE(ljh): RC demo를 위해 임의로 만든 Bouncing Light 설정 구조체와 관련 함수들
 namespace
 {
 
+tiny::f64 GetElapsedMilliseconds(Uint64 StartCounter, Uint64 EndCounter, Uint64 Frequency)
+{
+    return static_cast<tiny::f64>(EndCounter - StartCounter) * 1000.0 / static_cast<tiny::f64>(Frequency);
+}
+
+// NOTE(ljh): RC demo를 위해 임의로 만든 Bouncing Light 설정 구조체와 관련 함수들
 struct BouncingLightConfig
 {
     tiny::Vec2 Position;
@@ -208,8 +213,8 @@ int RunEngine(SDL_Window* Window, HWND WindowHandle)
         BouncingLightVelocities[LightIndex] = Config.Velocity;
     }
 
-    tiny::ImGuiLayer EditorGui;
-    if (!EditorGui.Initialize(Window, GraphicsDevice.GetDevice(), GraphicsDevice.GetContext()))
+    tiny::ImGuiLayer GuiLayer;
+    if (!GuiLayer.Initialize(Window, GraphicsDevice.GetDevice(), GraphicsDevice.GetContext()))
     {
         TE_LOG_ERROR("Core", "Failed to initialize ImGui");
         return 1;
@@ -217,17 +222,20 @@ int RunEngine(SDL_Window* Window, HWND WindowHandle)
 
     TE_LOG_INFO("Core", "Lighting Demo ready (%dx%d)", WindowWidth, WindowHeight);
 
+    tiny::DebugUi DebugUi;
+    const SDL_WindowID GameWindowID = SDL_GetWindowID(Window);
     bool bIsRunning = true;
     const Uint64 PerformanceFrequency = SDL_GetPerformanceFrequency();
     Uint64 PreviousFrameCounter = SDL_GetPerformanceCounter();
     tiny::f32 FrameTimeMilliseconds = FrameDelayMilliseconds;
-    tiny::f32 CurrentFps = TargetFps;
+    tiny::CpuFrameTiming PreviousCpuTiming;
 
     tiny::Input GameInput;
     tiny::PlayerController CatController;
 
     while (bIsRunning)
     {
+        tiny::CpuFrameTiming CurrentCpuTiming;
         const Uint64 FrameStartCounter = SDL_GetPerformanceCounter();
         const tiny::f32 DeltaSeconds =
             static_cast<tiny::f32>(FrameStartCounter - PreviousFrameCounter) /
@@ -235,7 +243,6 @@ int RunEngine(SDL_Window* Window, HWND WindowHandle)
         PreviousFrameCounter = FrameStartCounter;
 
         FrameTimeMilliseconds = DeltaSeconds * 1000.0f;
-        CurrentFps = DeltaSeconds > 0.0f ? 1.0f / DeltaSeconds : 0.0f;
 
         const Uint64 FrameStartTime = SDL_GetTicks();
 
@@ -244,24 +251,28 @@ int RunEngine(SDL_Window* Window, HWND WindowHandle)
         SDL_Event Event;
         while (SDL_PollEvent(&Event))
         {
-            EditorGui.ProcessEvent(Event);
-            GameInput.ProcessEvent(Event);
+            GuiLayer.ProcessEvent(Event);
+            if (SDL_GetWindowFromEvent(&Event) == Window)
+            {
+                GameInput.ProcessEvent(Event);
+            }
 
-            if (Event.type == SDL_EVENT_QUIT)
+            if (Event.type == SDL_EVENT_QUIT ||
+                (Event.type == SDL_EVENT_WINDOW_CLOSE_REQUESTED && Event.window.windowID == GameWindowID))
             {
                 bIsRunning = false;
             }
         }
+        if (!bIsRunning)
+        {
+            break;
+        }
         const float ClearColor[4] = {0.0f, 0.0f, 0.0f, 1.0f};
 
-        EditorGui.BeginFrame();
+        GuiLayer.BeginFrame();
 
-        if (GameInput.WasPressed(SDL_SCANCODE_ESCAPE))
-        {
-            bIsRunning = false;
-        }
-
-        if (!EditorGui.WantsKeyboard())
+        const Uint64 GameUpdateStartCounter = SDL_GetPerformanceCounter();
+        if (SDL_GetKeyboardFocus() == Window && !GuiLayer.WantsKeyboard())
         {
             if (tiny::Entity* Player = GameLevel.GetEntityByID(CatID))
             {
@@ -285,81 +296,26 @@ int RunEngine(SDL_Window* Window, HWND WindowHandle)
             }
         }
 
-        ImGui::Begin("TinyEngine");
-        ImGui::Text("FPS: %.1f / %.0f", CurrentFps, TargetFps);
-        ImGui::Text("Frame: %.2f ms / %.2f ms", FrameTimeMilliseconds, FrameDelayMilliseconds);
+        CurrentCpuTiming.GameUpdateMilliseconds = GetElapsedMilliseconds(
+            GameUpdateStartCounter, SDL_GetPerformanceCounter(), PerformanceFrequency);
 
-        ImGui::SeparatorText("Camera2D MVP");
-        ImGui::DragFloat("Camera X", &GameCamera.Position.X, 1.0f);
-        ImGui::DragFloat("Camera Y", &GameCamera.Position.Y, 1.0f);
-        ImGui::DragFloat("Zoom", &GameCamera.Zoom, 0.01f, 0.1f, 8.0f);
+        DebugUi.Draw(FrameTimeMilliseconds, TargetFps, PreviousCpuTiming, GameCamera, RenderPipeline);
 
-        bool bEnableRadianceCascades = RenderPipeline.IsRadianceCascadesEnabled();
-        if (ImGui::Checkbox("Radiance Cascades", &bEnableRadianceCascades))
-        {
-            RenderPipeline.SetLightingMode(
-                bEnableRadianceCascades
-                    ? tiny::LightingMode::RadianceCascades
-                    : tiny::LightingMode::Unlit);
-        }
-
-        if (RenderPipeline.IsGpuProfilerAvailable())
-        {
-            const tiny::GpuPassTiming& SpriteTiming = RenderPipeline.GetGpuTiming(tiny::GpuPass::Sprites);
-            const tiny::GpuPassTiming& LightingTiming = RenderPipeline.GetGpuTiming(tiny::GpuPass::Lighting);
-            const tiny::GpuPassTiming& CompositeTiming = RenderPipeline.GetGpuTiming(tiny::GpuPass::Composite);
-
-            ImGui::SeparatorText("GPU Scene Passes");
-
-            if (SpriteTiming.bIsValid)
-            {
-                ImGui::Text(
-                    "Sprites:   %.3f ms",
-                    SpriteTiming.Milliseconds);
-            }
-            else
-            {
-                ImGui::TextUnformatted("Sprites:   collecting...");
-            }
-
-            if (!RenderPipeline.IsRadianceCascadesEnabled())
-            {
-                ImGui::TextUnformatted("Lighting:  N/A (disabled)");
-            }
-            else if (LightingTiming.bIsValid)
-            {
-                ImGui::Text(
-                    "Lighting:  %.3f ms",
-                    LightingTiming.Milliseconds);
-            }
-            else
-            {
-                ImGui::TextUnformatted("Lighting:  collecting...");
-            }
-
-            if (CompositeTiming.bIsValid)
-            {
-                ImGui::Text(
-                    "Composite: %.3f ms",
-                    CompositeTiming.Milliseconds);
-            }
-            else
-            {
-                ImGui::TextUnformatted("Composite: collecting...");
-            }
-        }
-        else
-        {
-            ImGui::TextUnformatted("GPU profiler unavailable");
-        }
-
-        ImGui::End();
-
+        const Uint64 RenderSubmitStartCounter = SDL_GetPerformanceCounter();
         GraphicsDevice.BeginFrame(ClearColor);
         RenderPipeline.RenderFrame(GraphicsDevice, GameLevel, GameCamera);
 
-        EditorGui.EndFrame();
+        GuiLayer.EndFrame();
+        const Uint64 PresentStartCounter = SDL_GetPerformanceCounter();
         GraphicsDevice.Present();
+        const Uint64 PresentEndCounter = SDL_GetPerformanceCounter();
+
+        CurrentCpuTiming.RenderSubmitMilliseconds = GetElapsedMilliseconds(
+            RenderSubmitStartCounter, PresentStartCounter, PerformanceFrequency);
+        CurrentCpuTiming.PresentMilliseconds = GetElapsedMilliseconds(
+            PresentStartCounter, PresentEndCounter, PerformanceFrequency);
+        CurrentCpuTiming.bIsValid = true;
+        PreviousCpuTiming = CurrentCpuTiming;
 
         const Uint64 FrameEndTime = SDL_GetTicks();
         const Uint64 FrameTime = FrameEndTime - FrameStartTime;
