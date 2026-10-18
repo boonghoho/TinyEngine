@@ -39,9 +39,14 @@ float GetProbeSpacingPixels(int CascadeIndex)
     return 4.0 * (float) (1 << CascadeIndex);
 }
 
-int GetRaySide(int CascadeIndex)
+uint GetDirectionTileWidth(int CascadeIndex)
 {
-    return 8 * (1 << CascadeIndex);
+    return 8u << CascadeIndex;
+}
+
+uint GetDirectionTileHeight(int CascadeIndex)
+{
+    return 8u << CascadeIndex;
 }
 
 float4 MergeIntervals(float4 NearInterval, float4 FarInterval)
@@ -63,7 +68,9 @@ float4 LoadCascade(Texture2D CascadeTexture, uint2 TexelCoord)
 float4 LoadFarCone(uint2 DestinationProbeCoord, uint DestinationDirectionIndex, int DestinationCascadeIndex)
 {
     int FarCascadeIndex = DestinationCascadeIndex + 1;
-    int FarRaySide = GetRaySide(FarCascadeIndex);
+    uint FarDirectionTileWidth = GetDirectionTileWidth(FarCascadeIndex);
+    uint FarDirectionTileHeight = GetDirectionTileHeight(FarCascadeIndex);
+    uint2 FarDirectionTileSize = uint2(FarDirectionTileWidth, FarDirectionTileHeight);
     float FarProbeSpacingPixels = GetProbeSpacingPixels(FarCascadeIndex);
     float DestinationProbeSpacingPixels = GetProbeSpacingPixels(DestinationCascadeIndex);
 
@@ -76,8 +83,8 @@ float4 LoadFarCone(uint2 DestinationProbeCoord, uint DestinationDirectionIndex, 
     uint FarTextureHeight = 0;
     FarCascadeTexture.GetDimensions(FarTextureWidth, FarTextureHeight);
     uint2 FarProbeCount = uint2(
-        FarTextureWidth / FarRaySide,
-        FarTextureHeight / FarRaySide
+        FarTextureWidth / FarDirectionTileWidth,
+        FarTextureHeight / FarDirectionTileHeight
     );
 
     float4 FarCone = float4(0.0, 0.0, 0.0, 0.0);
@@ -87,7 +94,10 @@ float4 LoadFarCone(uint2 DestinationProbeCoord, uint DestinationDirectionIndex, 
     for (uint ChildDirection = 0; ChildDirection < 4; ++ChildDirection)
     {
         uint FarDirectionIndex = FarDirectionBaseIndex + ChildDirection;
-        uint2 FarDirectionCoord = uint2(FarDirectionIndex % FarRaySide, FarDirectionIndex / FarRaySide);
+        uint2 FarDirectionCoord = uint2(
+            FarDirectionIndex % FarDirectionTileWidth,
+            FarDirectionIndex / FarDirectionTileWidth
+        );
 
         // NOTE(ljh): 먼 probe 간격이 더 넓으므로 주변 2 x 2 probe를 bilinear interpolate한다.
         [unroll]
@@ -107,7 +117,8 @@ float4 LoadFarCone(uint2 DestinationProbeCoord, uint DestinationDirectionIndex, 
                 float WeightY = OffsetY == 0 ? 1.0 - FarProbeRatio.y : FarProbeRatio.y;
                 float Weight = WeightX * WeightY;
 
-                uint2 FarTexelCoord = (uint2) FarProbeCoordSigned * FarRaySide + FarDirectionCoord;
+                uint2 FarTexelCoord =
+                    (uint2) FarProbeCoordSigned * FarDirectionTileSize + FarDirectionCoord;
                 FarCone += LoadCascade(FarCascadeTexture, FarTexelCoord) * (Weight * 0.25);
             }
         }
@@ -119,12 +130,14 @@ float4 LoadFarCone(uint2 DestinationProbeCoord, uint DestinationDirectionIndex, 
 float4 PSMain(VSOutput Input) : SV_TARGET
 {
     int CascadeIndex = GetCascadeIndex();
-    int RaySide = GetRaySide(CascadeIndex);
+    uint DirectionTileWidth = GetDirectionTileWidth(CascadeIndex);
+    uint DirectionTileHeight = GetDirectionTileHeight(CascadeIndex);
+    uint2 DirectionTileSize = uint2(DirectionTileWidth, DirectionTileHeight);
 
     uint2 TexelCoord = (uint2) Input.Position.xy;
-    uint2 DirectionCoord = TexelCoord % RaySide;
-    uint2 ProbeCoord = TexelCoord / RaySide;
-    uint DirectionIndex = DirectionCoord.x + DirectionCoord.y * RaySide;
+    uint2 DirectionCoord = TexelCoord % DirectionTileSize;
+    uint2 ProbeCoord = TexelCoord / DirectionTileSize;
+    uint DirectionIndex = DirectionCoord.x + DirectionCoord.y * DirectionTileWidth;
 
     float4 NearInterval = LoadCascade(NearCascadeTexture, TexelCoord);
     float4 FarCone = LoadFarCone(ProbeCoord, DirectionIndex, CascadeIndex);

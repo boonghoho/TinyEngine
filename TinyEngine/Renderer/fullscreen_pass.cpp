@@ -165,6 +165,7 @@ void FullscreenPass::Render(
 
     DeviceContext->Draw(3, 0);
 
+    // TODO(ljh): full screen pass 에서 사용하는 srv 슬롯이 8개를 넘어갈 경우, 여기서 해제하지 않으면 다음 pass에서 문제가 발생할 수 있다.
     ID3D11ShaderResourceView* NullShaderResourceViews[8] = {};
     DeviceContext->PSSetShaderResources(0, 8, NullShaderResourceViews);
 }

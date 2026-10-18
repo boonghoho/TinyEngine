@@ -46,7 +46,8 @@ public:
 
 private:
     static constexpr int BaseProbeSpacingPixels = 4;
-    static constexpr int BaseRaySide = 8;
+    static constexpr int BaseDirectionTileWidth = 8;
+    static constexpr int BaseDirectionTileHeight = 8;
     static constexpr u32 MaxScenePrimitives = 256;
 
     // NOTE(ljh): Light와 Collider를 같은 buffer에 담기 위한 struct
@@ -60,6 +61,8 @@ private:
 
     int GetCascadeTextureWidth(int CascadeIndex) const;
     int GetCascadeTextureHeight(int CascadeIndex) const;
+    int GetDirectionTileWidth(int CascadeIndex) const;
+    int GetDirectionTileHeight(int CascadeIndex) const;
     bool InitializeScenePrimitiveBuffer(ID3D11Device* Device);
     u32 UploadScenePrimitives(ID3D11DeviceContext* DeviceContext, const Level& GameLevel);
 

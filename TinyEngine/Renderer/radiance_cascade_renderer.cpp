@@ -353,17 +353,27 @@ ID3D11ShaderResourceView* RadianceCascadeRenderer::GetMergedShaderResourceView()
 int RadianceCascadeRenderer::GetCascadeTextureWidth(int CascadeIndex) const
 {
     const int ProbeSpacingPixels = BaseProbeSpacingPixels << CascadeIndex;
-    const int RaySide = BaseRaySide << CascadeIndex;
+    const int DirectionTileWidth = GetDirectionTileWidth(CascadeIndex);
 
-    return CeilDivide(SceneWidth, ProbeSpacingPixels) * RaySide;
+    return CeilDivide(SceneWidth, ProbeSpacingPixels) * DirectionTileWidth;
 }
 
 int RadianceCascadeRenderer::GetCascadeTextureHeight(int CascadeIndex) const
 {
     const int ProbeSpacingPixels = BaseProbeSpacingPixels << CascadeIndex;
-    const int RaySide = BaseRaySide << CascadeIndex;
+    const int DirectionTileHeight = GetDirectionTileHeight(CascadeIndex);
 
-    return CeilDivide(SceneHeight, ProbeSpacingPixels) * RaySide;
+    return CeilDivide(SceneHeight, ProbeSpacingPixels) * DirectionTileHeight;
+}
+
+int RadianceCascadeRenderer::GetDirectionTileWidth(int CascadeIndex) const
+{
+    return BaseDirectionTileWidth << CascadeIndex;
+}
+
+int RadianceCascadeRenderer::GetDirectionTileHeight(int CascadeIndex) const
+{
+    return BaseDirectionTileHeight << CascadeIndex;
 }
 
 }

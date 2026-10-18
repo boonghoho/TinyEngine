@@ -22,7 +22,6 @@ public:
     Entity& CreateEntity();
     Entity* GetEntityByID(u32 ID);
 
-    std::vector<Entity>& GetEntities() { return Entities; }
     const std::vector<Entity>& GetEntities() const { return Entities; }
     const std::vector<AABB>& GetColliders() const { return Colliders; }
 

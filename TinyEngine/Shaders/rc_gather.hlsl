@@ -57,11 +57,14 @@ float GetProbeSpacingPixels(int CascadeIndex)
     return 4.0 * (float)(1 << CascadeIndex);
 }
 
-int GetRaySide(int CascadeIndex)
+uint GetDirectionTileWidth(int CascadeIndex)
 {
-    // NOTE(ljh): 반환값은 ray 개수가 아니라 방향 블록 한 변의 길이다.
-    // 실제 방향 수는 RaySide^2이며 C0 = 64, C1 = 256, C2 = 1024, C3 = 4096이다.
-    return 8 * (1 << CascadeIndex);
+    return 8u << CascadeIndex;
+}
+
+uint GetDirectionTileHeight(int CascadeIndex)
+{
+    return 8u << CascadeIndex;
 }
 
 float IntervalScale(int CascadeIndex)
@@ -247,14 +250,16 @@ float4 CastInterval(float2 ProbeCenterWorld, float2 Direction, float2 IntervalRa
 float4 PSMain(VSOutput Input) : SV_TARGET
 {
     int CascadeIndex = GetCascadeIndex();
-    int RaySide = GetRaySide(CascadeIndex);
-    int DirectionCount = RaySide * RaySide;
+    uint DirectionTileWidth = GetDirectionTileWidth(CascadeIndex);
+    uint DirectionTileHeight = GetDirectionTileHeight(CascadeIndex);
+    uint DirectionCount = DirectionTileWidth * DirectionTileHeight;
 
     uint2 TexelCoord = (uint2) Input.Position.xy;
-    uint2 DirectionCoord = TexelCoord % RaySide;
-    uint2 ProbeCoord = TexelCoord / RaySide;
-    
-    int DirectionIndex = (int) (DirectionCoord.x + DirectionCoord.y * RaySide);
+    uint2 DirectionTileSize = uint2(DirectionTileWidth, DirectionTileHeight);
+    uint2 DirectionCoord = TexelCoord % DirectionTileSize;
+    uint2 ProbeCoord = TexelCoord / DirectionTileSize;
+
+    uint DirectionIndex = DirectionCoord.x + DirectionCoord.y * DirectionTileWidth;
     float Angle = 6.2831853 * (((float) DirectionIndex + 0.5) / (float) DirectionCount);
     float2 Direction = float2(cos(Angle), sin(Angle));
 
