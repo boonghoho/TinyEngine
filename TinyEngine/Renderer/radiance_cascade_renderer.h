@@ -12,7 +12,7 @@ namespace tiny
 {
 
 class D3D11Device;
-class Level;
+struct RenderFrameData;
 
 // NOTE(ljh): Radiance Cascades에 필요한 Pass와 중간 Texture를 소유하고 실행한다.
 class RadianceCascadeRenderer
@@ -31,7 +31,7 @@ public:
 
     void GenerateLighting(
         D3D11Device& GraphicsDevice,
-        const Level& GameLevel,
+        const RenderFrameData& Frame,
         ID3D11Buffer* CameraConstantBuffer);
 
     void ResolveLighting(
@@ -50,12 +50,12 @@ private:
     static constexpr int BaseDirectionTileHeight = 8;
     static constexpr u32 MaxScenePrimitives = 256;
 
-    // NOTE(ljh): Light와 Collider를 같은 buffer에 담기 위한 struct
+    // NOTE(ljh): 광원과 차폐물을 같은 buffer에 담는다.
     struct ScenePrimitiveGpu
     {
         f32 Shape[4];
 
-        // NOTE(ljh): rgb = Light2D RGB * Intensity, a = Light면 1, Collider면 0.
+        // NOTE(ljh): rgb = 밝기가 반영된 광원 색상, a = 광원이면 1, 차폐물이면 0.
         f32 LightData[4];
     };
 
@@ -64,7 +64,7 @@ private:
     int GetDirectionTileWidth(int CascadeIndex) const;
     int GetDirectionTileHeight(int CascadeIndex) const;
     bool InitializeScenePrimitiveBuffer(ID3D11Device* Device);
-    u32 UploadScenePrimitives(ID3D11DeviceContext* DeviceContext, const Level& GameLevel);
+    u32 UploadScenePrimitives(ID3D11DeviceContext* DeviceContext, const RenderFrameData& Frame);
 
     int SceneWidth = 0;
     int SceneHeight = 0;

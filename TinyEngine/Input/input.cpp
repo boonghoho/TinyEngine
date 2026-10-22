@@ -7,6 +7,7 @@ void Input::BeginFrame()
 {
     PressedKeys.fill(false);
     ReleasedKeys.fill(false);
+    bKeyboardReset = false;
 }
 
 void Input::ProcessEvent(const SDL_Event& Event)
@@ -14,6 +15,7 @@ void Input::ProcessEvent(const SDL_Event& Event)
     if (Event.type == SDL_EVENT_WINDOW_FOCUS_LOST)
     {
         ClearKeyboardState();
+        bKeyboardReset = true;
         return;
     }
 
@@ -47,6 +49,22 @@ void Input::ProcessEvent(const SDL_Event& Event)
     }
 
     DownKeys[KeyIndex] = false;
+}
+
+void Input::Accumulate(const Input& NewInput)
+{
+    if (NewInput.bKeyboardReset)
+    {
+        ClearKeyboardState();
+    }
+
+    DownKeys = NewInput.DownKeys;
+    for (std::size_t KeyIndex = 0; KeyIndex < KeyCount; ++KeyIndex)
+    {
+        PressedKeys[KeyIndex] = PressedKeys[KeyIndex] || NewInput.PressedKeys[KeyIndex];
+        ReleasedKeys[KeyIndex] = ReleasedKeys[KeyIndex] || NewInput.ReleasedKeys[KeyIndex];
+    }
+    bKeyboardReset = bKeyboardReset || NewInput.bKeyboardReset;
 }
 
 bool Input::IsDown(SDL_Scancode Key) const

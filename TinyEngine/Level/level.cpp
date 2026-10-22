@@ -2,9 +2,10 @@
 
 #include "../Core/log.h"
 
-#include "../Renderer/sprite_renderer.h"
+#include "../Renderer/render_frame_data.h"
 #include "../../ThirdParty/nlohmann/json.hpp"
 
+#include <algorithm>
 #include <exception>
 #include <filesystem>
 #include <fstream>
@@ -306,8 +307,63 @@ bool Level::Initialize(ID3D11Device* Device, const char* MapFilePath)
     }
 }
 
-void Level::RenderTileMap(SpriteRenderer& Renderer) const
+void Level::BuildRenderFrame(const Camera2D& Camera, const RenderSettings& Settings, RenderFrameData& Frame) const
 {
+    Frame.Camera = Camera;
+    Frame.Settings = Settings;
+    Frame.Sprites.clear();
+    Frame.Lights.clear();
+    Frame.Occluders = Colliders;
+
+    AppendTileSprites(Frame.Sprites);
+
+    for (const Entity& CurrentEntity : Entities)
+    {
+        if (CurrentEntity.SpriteComponent)
+        {
+            const Sprite& CurrentSprite = *CurrentEntity.SpriteComponent;
+            SpriteDrawCommand Command;
+            Command.TextureSRV = CurrentSprite.Texture ? CurrentSprite.Texture->GetShaderResourceView() : nullptr;
+            Command.X = CurrentEntity.Transform.X;
+            Command.Y = CurrentEntity.Transform.Y;
+            Command.Width = CurrentSprite.Width * CurrentEntity.Transform.ScaleX;
+            Command.Height = CurrentSprite.Height * CurrentEntity.Transform.ScaleY;
+
+            if (Command.TextureSRV && Command.Width > 0.0f && Command.Height > 0.0f)
+            {
+                Frame.Sprites.push_back(Command);
+            }
+        }
+
+        if (CurrentEntity.LightComponent)
+        {
+            const Light2D& Light = *CurrentEntity.LightComponent;
+            RenderLight RenderLight;
+            RenderLight.X = CurrentEntity.Transform.X;
+            RenderLight.Y = CurrentEntity.Transform.Y;
+            if (CurrentEntity.SpriteComponent)
+            {
+                const Sprite& CurrentSprite = *CurrentEntity.SpriteComponent;
+                RenderLight.X += CurrentSprite.Width * CurrentEntity.Transform.ScaleX * 0.5f;
+                RenderLight.Y += CurrentSprite.Height * CurrentEntity.Transform.ScaleY * 0.5f;
+            }
+            RenderLight.Radius = (std::max)(Light.Radius, 1.0f);
+            RenderLight.R = Light.R * Light.Intensity;
+            RenderLight.G = Light.G * Light.Intensity;
+            RenderLight.B = Light.B * Light.Intensity;
+            Frame.Lights.push_back(RenderLight);
+        }
+    }
+}
+
+void Level::AppendTileSprites(std::vector<SpriteDrawCommand>& Sprites) const
+{
+    ID3D11ShaderResourceView* TextureSRV = TilesetTexture.GetShaderResourceView();
+    if (!TextureSRV)
+    {
+        return;
+    }
+
     for (const TileLayer& CurrentLayer : TileLayers)
     {
         if (!CurrentLayer.bIsVisible)
@@ -342,13 +398,14 @@ void Level::RenderTileMap(SpriteRenderer& Renderer) const
                     static_cast<f32>((SourceRow + 1) * TilesetTileHeight) / TilesetImageHeight,
                 };
 
-                Renderer.Draw(
-                    TilesetTexture.GetShaderResourceView(),
+                Sprites.push_back({
+                    TextureSRV,
                     static_cast<f32>(TileX * MapTileWidth),
                     static_cast<f32>(TileY * MapTileHeight),
                     static_cast<f32>(MapTileWidth),
                     static_cast<f32>(MapTileHeight),
-                    SourceUV);
+                    SourceUV,
+                    {}});
             }
         }
     }

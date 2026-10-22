@@ -143,10 +143,12 @@
     <ClCompile Include="..\ThirdParty\imgui\backends\imgui_impl_dx11.cpp" />
     <ClCompile Include="..\ThirdParty\imgui\backends\imgui_impl_sdl3.cpp" />
     <ClCompile Include="Core\assert.cpp" />
+    <ClCompile Include="Core\frame_exchange.cpp" />
     <ClCompile Include="Core\log.cpp" />
     <ClCompile Include="Debug\debug_ui.cpp" />
     <ClCompile Include="UI\imgui_layer.cpp" />
     <ClCompile Include="Game\player_controller.cpp" />
+    <ClCompile Include="Game\lighting_demo.cpp" />
     <ClCompile Include="Input\input.cpp" />
     <ClCompile Include="Level\level.cpp" />
     <ClCompile Include="main.cpp" />
@@ -169,6 +171,7 @@
     <ClInclude Include="..\ThirdParty\imgui\backends\imgui_impl_dx11.h" />
     <ClInclude Include="..\ThirdParty\imgui\backends\imgui_impl_sdl3.h" />
     <ClInclude Include="Core\assert.h" />
+    <ClInclude Include="Core\frame_exchange.h" />
     <ClInclude Include="Core\frame_timing.h" />
     <ClInclude Include="Core\log.h" />
     <ClInclude Include="Core\math_types.h" />
@@ -176,6 +179,7 @@
     <ClInclude Include="Debug\debug_ui.h" />
     <ClInclude Include="UI\imgui_layer.h" />
     <ClInclude Include="Game\player_controller.h" />
+    <ClInclude Include="Game\lighting_demo.h" />
     <ClInclude Include="Input\input.h" />
     <ClInclude Include="Level\Components\light2d.h" />
     <ClInclude Include="Level\Components\sprite.h" />
@@ -189,6 +193,7 @@
     <ClInclude Include="Renderer\fullscreen_pass.h" />
     <ClInclude Include="Renderer\radiance_cascade_renderer.h" />
     <ClInclude Include="Renderer\render_pipeline.h" />
+    <ClInclude Include="Renderer\render_frame_data.h" />
     <ClInclude Include="Renderer\shader.h" />
     <ClInclude Include="Renderer\render_texture.h" />
     <ClInclude Include="Renderer\sprite_renderer.h" />

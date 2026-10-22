@@ -11,13 +11,16 @@ struct ID3D11Device;
 namespace tiny
 {
 
-class SpriteRenderer;
+struct Camera2D;
+struct RenderSettings;
+struct RenderFrameData;
+struct SpriteDrawCommand;
 
 class Level
 {
 public:
     bool Initialize(ID3D11Device* Device, const char* MapFilePath);
-    void RenderTileMap(SpriteRenderer& Renderer) const;
+    void BuildRenderFrame(const Camera2D& Camera, const RenderSettings& Settings, RenderFrameData& Frame) const;
 
     Entity& CreateEntity();
     Entity* GetEntityByID(u32 ID);
@@ -26,6 +29,8 @@ public:
     const std::vector<AABB>& GetColliders() const { return Colliders; }
 
 private:
+    void AppendTileSprites(std::vector<SpriteDrawCommand>& Sprites) const;
+
     struct TileLayer
     {
         std::vector<u32> TileGIDs;

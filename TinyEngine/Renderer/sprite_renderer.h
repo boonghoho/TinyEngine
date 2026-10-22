@@ -1,44 +1,14 @@
 #pragma once
 
 #include "../Core/types.h"
-#include "camera2d.h"
+#include "render_frame_data.h"
 
 #include <d3d11.h>
 #include <wrl/client.h>
 #include <vector>
 
-// NOTE(ljh): 텍스처에서 사용할 정규화된 영역이다. 전체 텍스처는 { 0, 0, 1, 1 }이다.
 namespace tiny
 {
-
-struct UVRect
-{
-    float U0 = 0.0f;
-    float V0 = 0.0f;
-    float U1 = 1.0f;
-    float V1 = 1.0f;
-};
-
-struct ColorTint
-{
-    float R = 1.0f;
-    float G = 1.0f;
-    float B = 1.0f;
-    float A = 1.0f;
-};
-
-struct SpriteDrawCommand
-{
-    ID3D11ShaderResourceView* TextureSRV = nullptr;
-
-    float X = 0.0f;
-    float Y = 0.0f;
-    float Width = 0.0f;
-    float Height = 0.0f;
-
-    UVRect SourceUV;
-    ColorTint Tint;
-};
 
 // NOTE(ljh): 화면 픽셀 좌표를 받아 텍스처가 입혀진 사각형 하나를 렌더링한다.
 class SpriteRenderer

@@ -4,7 +4,6 @@
 
 #include "camera2d.h"
 #include "d3d11_device.h"
-#include "../Level/level.h"
 
 namespace tiny
 {
@@ -93,13 +92,12 @@ void RenderPipeline::Release()
 
 void RenderPipeline::RenderFrame(
     D3D11Device& GraphicsDevice,
-    const Level& GameLevel,
-    const Camera2D& Camera)
+    const RenderFrameData& Frame)
 {
     ID3D11DeviceContext* DeviceContext = GraphicsDevice.GetContext();
-    const bool bUseRadianceCascades = IsRadianceCascadesEnabled();
+    const bool bUseRadianceCascades = Frame.Settings.Lighting == LightingMode::RadianceCascades;
 
-    if (!UpdateCameraConstants(DeviceContext, Camera))
+    if (!UpdateCameraConstants(DeviceContext, Frame.Camera))
     {
         return;
     }
@@ -109,7 +107,7 @@ void RenderPipeline::RenderFrame(
     // NOTE(ljh): 1. 조명의 영향을 받기 전 sprite/tile 원본 색상을 그린다.
     GpuProfiler.BeginPass(DeviceContext, GpuPass::Sprites);
     GraphicsDevice.BeginGpuEvent(L"RenderSprites");
-    RenderSprites(GraphicsDevice, GameLevel, CameraConstantBuffer.Get());
+    RenderSprites(GraphicsDevice, Frame, CameraConstantBuffer.Get());
     GraphicsDevice.EndGpuEvent();
     GpuProfiler.EndPass(DeviceContext, GpuPass::Sprites);
 
@@ -118,7 +116,7 @@ void RenderPipeline::RenderFrame(
     {
         GpuProfiler.BeginPass(DeviceContext, GpuPass::Lighting);
         GraphicsDevice.BeginGpuEvent(L"RenderLighting");
-        RenderLighting(GraphicsDevice, GameLevel, CameraConstantBuffer.Get());
+        RenderLighting(GraphicsDevice, Frame, CameraConstantBuffer.Get());
         GraphicsDevice.EndGpuEvent();
         GpuProfiler.EndPass(DeviceContext, GpuPass::Lighting);
     }
@@ -135,7 +133,7 @@ void RenderPipeline::RenderFrame(
 
 void RenderPipeline::RenderSprites(
     D3D11Device& GraphicsDevice,
-    const Level& GameLevel,
+    const RenderFrameData& Frame,
     ID3D11Buffer* CameraConstantBuffer)
 {
     const float ClearColor[4] = {0.0f, 0.0f, 0.0f, 0.0f};
@@ -147,28 +145,17 @@ void RenderPipeline::RenderSprites(
     GraphicsDevice.ClearRenderTarget(SpriteColorTexture.GetRenderTargetView(), ClearColor);
 
     SpriteRenderer.Begin(GraphicsDevice.GetContext(), CameraConstantBuffer);
-    GameLevel.RenderTileMap(SpriteRenderer);
 
-    for (const Entity& CurrentEntity : GameLevel.GetEntities())
+    for (const SpriteDrawCommand& Sprite : Frame.Sprites)
     {
-        if (!CurrentEntity.SpriteComponent)
-        {
-            continue;
-        }
-
-        const Sprite& CurrentSprite = *CurrentEntity.SpriteComponent;
-
-        if (CurrentSprite.Texture == nullptr)
-        {
-            continue;
-        }
-
         SpriteRenderer.Draw(
-            CurrentSprite.Texture->GetShaderResourceView(),
-            CurrentEntity.Transform.X,
-            CurrentEntity.Transform.Y,
-            CurrentSprite.Width * CurrentEntity.Transform.ScaleX,
-            CurrentSprite.Height * CurrentEntity.Transform.ScaleY);
+            Sprite.TextureSRV,
+            Sprite.X,
+            Sprite.Y,
+            Sprite.Width,
+            Sprite.Height,
+            Sprite.SourceUV,
+            Sprite.Tint);
     }
 
     SpriteRenderer.End();
@@ -176,10 +163,10 @@ void RenderPipeline::RenderSprites(
 
 void RenderPipeline::RenderLighting(
     D3D11Device& GraphicsDevice,
-    const Level& GameLevel,
+    const RenderFrameData& Frame,
     ID3D11Buffer* CameraConstantBuffer)
 {
-    RadianceCascades.GenerateLighting(GraphicsDevice, GameLevel, CameraConstantBuffer);
+    RadianceCascades.GenerateLighting(GraphicsDevice, Frame, CameraConstantBuffer);
 
     const float ClearColor[4] = {0.0f, 0.0f, 0.0f, 1.0f};
 

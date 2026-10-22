@@ -96,6 +96,9 @@
     <ClCompile Include="Core\assert.cpp">
       <Filter>Source Files\Core</Filter>
     </ClCompile>
+    <ClCompile Include="Core\frame_exchange.cpp">
+      <Filter>Source Files\Core</Filter>
+    </ClCompile>
     <ClCompile Include="Core\log.cpp">
       <Filter>Source Files\Core</Filter>
     </ClCompile>
@@ -106,6 +109,9 @@
       <Filter>Source Files\UI</Filter>
     </ClCompile>
     <ClCompile Include="Game\player_controller.cpp">
+      <Filter>Source Files\Game</Filter>
+    </ClCompile>
+    <ClCompile Include="Game\lighting_demo.cpp">
       <Filter>Source Files\Game</Filter>
     </ClCompile>
     <ClCompile Include="Input\input.cpp">
@@ -170,6 +176,9 @@
     <ClInclude Include="Core\assert.h">
       <Filter>Header Files\Core</Filter>
     </ClInclude>
+    <ClInclude Include="Core\frame_exchange.h">
+      <Filter>Header Files\Core</Filter>
+    </ClInclude>
     <ClInclude Include="Core\frame_timing.h">
       <Filter>Header Files\Core</Filter>
     </ClInclude>
@@ -189,6 +198,9 @@
       <Filter>Header Files\UI</Filter>
     </ClInclude>
     <ClInclude Include="Game\player_controller.h">
+      <Filter>Header Files\Game</Filter>
+    </ClInclude>
+    <ClInclude Include="Game\lighting_demo.h">
       <Filter>Header Files\Game</Filter>
     </ClInclude>
     <ClInclude Include="Input\input.h">
@@ -225,6 +237,9 @@
       <Filter>Header Files\Renderer</Filter>
     </ClInclude>
     <ClInclude Include="Renderer\render_pipeline.h">
+      <Filter>Header Files\Renderer</Filter>
+    </ClInclude>
+    <ClInclude Include="Renderer\render_frame_data.h">
       <Filter>Header Files\Renderer</Filter>
     </ClInclude>
     <ClInclude Include="Renderer\shader.h">

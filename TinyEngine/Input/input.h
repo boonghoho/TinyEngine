@@ -13,6 +13,7 @@ class Input
 public:
     void BeginFrame();
     void ProcessEvent(const SDL_Event& Event);
+    void Accumulate(const Input& NewInput);
 
     bool IsDown(SDL_Scancode Key) const;
     bool WasPressed(SDL_Scancode Key) const;
@@ -27,6 +28,7 @@ private:
     std::array<bool, KeyCount> DownKeys{};
     std::array<bool, KeyCount> PressedKeys{};
     std::array<bool, KeyCount> ReleasedKeys{};
+    bool bKeyboardReset = false;
 };
 
 }

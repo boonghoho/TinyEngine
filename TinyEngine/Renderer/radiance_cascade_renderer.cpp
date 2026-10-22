@@ -4,7 +4,7 @@
 #include "../Core/log.h"
 
 #include "d3d11_device.h"
-#include "../Level/level.h"
+#include "render_frame_data.h"
 
 #include <algorithm>
 #include <array>
@@ -115,7 +115,7 @@ void RadianceCascadeRenderer::Release()
 
 void RadianceCascadeRenderer::GenerateLighting(
     D3D11Device& GraphicsDevice,
-    const Level& GameLevel,
+    const RenderFrameData& Frame,
     ID3D11Buffer* CameraConstantBuffer)
 {
     if (!CameraConstantBuffer)
@@ -129,8 +129,7 @@ void RadianceCascadeRenderer::GenerateLighting(
     // NOTE(ljh): FullscreenPass의 frame constants(b0)와 충돌하지 않도록 camera는 b1에 둔다.
     GraphicsDevice.GetContext()->PSSetConstantBuffers(1, 1, CameraConstantBuffers);
 
-    // NOTE(ljh): 움직이는 light도 매 frame 반영되도록 collider와 Light2D를 GPU structured buffer에 다시 올린다.
-    const u32 ScenePrimitiveCount = UploadScenePrimitives(GraphicsDevice.GetContext(), GameLevel);
+    const u32 ScenePrimitiveCount = UploadScenePrimitives(GraphicsDevice.GetContext(), Frame);
 
     static const wchar_t* GatherEventNames[CascadeCount] = {
         L"RC Gather C0",
@@ -261,13 +260,12 @@ bool RadianceCascadeRenderer::InitializeScenePrimitiveBuffer(ID3D11Device* Devic
     return true;
 }
 
-u32 RadianceCascadeRenderer::UploadScenePrimitives(ID3D11DeviceContext* DeviceContext, const Level& GameLevel)
+u32 RadianceCascadeRenderer::UploadScenePrimitives(ID3D11DeviceContext* DeviceContext, const RenderFrameData& Frame)
 {
     std::array<ScenePrimitiveGpu, MaxScenePrimitives> ScenePrimitives = {};
     u32 PrimitiveCount = 0;
 
-    // NOTE(ljh): Collider는 빛을 내지 않는 AABB occluder로 사용.
-    for (const AABB& Collider : GameLevel.GetColliders())
+    for (const AABB& Occluder : Frame.Occluders)
     {
         if (PrimitiveCount >= MaxScenePrimitives)
         {
@@ -275,39 +273,27 @@ u32 RadianceCascadeRenderer::UploadScenePrimitives(ID3D11DeviceContext* DeviceCo
         }
 
         ScenePrimitiveGpu& Primitive = ScenePrimitives[PrimitiveCount++];
-        Primitive.Shape[0] = Collider.Min.X;
-        Primitive.Shape[1] = Collider.Min.Y;
-        Primitive.Shape[2] = Collider.Max.X;
-        Primitive.Shape[3] = Collider.Max.Y;
+        Primitive.Shape[0] = Occluder.Min.X;
+        Primitive.Shape[1] = Occluder.Min.Y;
+        Primitive.Shape[2] = Occluder.Max.X;
+        Primitive.Shape[3] = Occluder.Max.Y;
         Primitive.LightData[3] = 0.0f;
     }
 
-    // NOTE(ljh): Light2D는 원형 emitter로 사용.
-    for (const Entity& CurrentEntity : GameLevel.GetEntities())
+    for (const RenderLight& Light : Frame.Lights)
     {
-        if (!CurrentEntity.LightComponent || PrimitiveCount >= MaxScenePrimitives)
+        if (PrimitiveCount >= MaxScenePrimitives)
         {
-            continue;
-        }
-
-        const Light2D& CurrentLight = *CurrentEntity.LightComponent;
-        float CenterX = CurrentEntity.Transform.X;
-        float CenterY = CurrentEntity.Transform.Y;
-
-        if (CurrentEntity.SpriteComponent)
-        {
-            const Sprite& CurrentSprite = *CurrentEntity.SpriteComponent;
-            CenterX += CurrentSprite.Width * CurrentEntity.Transform.ScaleX * 0.5f;
-            CenterY += CurrentSprite.Height * CurrentEntity.Transform.ScaleY * 0.5f;
+            break;
         }
 
         ScenePrimitiveGpu& Primitive = ScenePrimitives[PrimitiveCount++];
-        Primitive.Shape[0] = CenterX;
-        Primitive.Shape[1] = CenterY;
-        Primitive.Shape[2] = (std::max)(CurrentLight.Radius, 1.0f);
-        Primitive.LightData[0] = CurrentLight.R * CurrentLight.Intensity;
-        Primitive.LightData[1] = CurrentLight.G * CurrentLight.Intensity;
-        Primitive.LightData[2] = CurrentLight.B * CurrentLight.Intensity;
+        Primitive.Shape[0] = Light.X;
+        Primitive.Shape[1] = Light.Y;
+        Primitive.Shape[2] = Light.Radius;
+        Primitive.LightData[0] = Light.R;
+        Primitive.LightData[1] = Light.G;
+        Primitive.LightData[2] = Light.B;
         Primitive.LightData[3] = 1.0f;
     }
 

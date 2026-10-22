@@ -3,6 +3,7 @@
 #include "d3d11_gpu_profiler.h"
 #include "fullscreen_pass.h"
 #include "radiance_cascade_renderer.h"
+#include "render_frame_data.h"
 #include "render_texture.h"
 #include "sprite_renderer.h"
 
@@ -10,14 +11,6 @@ namespace tiny
 {
 
 class D3D11Device;
-class Level;
-struct Camera2D;
-
-enum class LightingMode
-{
-    Unlit,
-    RadianceCascades,
-};
 
 // NOTE(ljh): 한 frame의 게임 장면을 어떤 순서로 그릴지 관리한다.
 class RenderPipeline
@@ -34,12 +27,7 @@ public:
 
     void RenderFrame(
         D3D11Device& GraphicsDevice,
-        const Level& GameLevel,
-        const Camera2D& Camera);
-
-    void SetLightingMode(LightingMode Mode) { CurrentLightingMode = Mode; }
-    LightingMode GetLightingMode() const { return CurrentLightingMode; }
-    bool IsRadianceCascadesEnabled() const { return CurrentLightingMode == LightingMode::RadianceCascades; }
+        const RenderFrameData& Frame);
 
     const GpuPassTiming& GetGpuTiming(GpuPass Pass) const { return GpuProfiler.GetTiming(Pass); }
     bool IsGpuProfilerAvailable() const { return GpuProfiler.IsInitialized(); }
@@ -47,11 +35,11 @@ public:
 private:
     void RenderSprites(
         D3D11Device& GraphicsDevice,
-        const Level& GameLevel,
+        const RenderFrameData& Frame,
         ID3D11Buffer* CameraConstantBuffer);
     void RenderLighting(
         D3D11Device& GraphicsDevice,
-        const Level& GameLevel,
+        const RenderFrameData& Frame,
         ID3D11Buffer* CameraConstantBuffer);
     void CompositeScene(D3D11Device& GraphicsDevice, bool bUseLighting);
     bool UpdateCameraConstants(ID3D11DeviceContext* DeviceContext, const Camera2D& Camera);
@@ -75,8 +63,6 @@ private:
     RadianceCascadeRenderer RadianceCascades;
     FullscreenPass CompositePass;
     D3D11GpuProfiler GpuProfiler;
-
-    LightingMode CurrentLightingMode = LightingMode::RadianceCascades;
 
     Microsoft::WRL::ComPtr<ID3D11Buffer> CameraConstantBuffer;
 };
